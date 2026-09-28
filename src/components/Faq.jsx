@@ -7,7 +7,8 @@ const PREGUNTAS = [
   ["¿Cómo me conecto al servidor?", <>Abre FiveM, presiona F8 y escribe <code>{CONNECT}</code>. También puedes usar el botón «Conectarse» de arriba.</>],
   ["¿Cuánto se demora en revisar mi whitelist?", "La escrita se revisa normalmente entre 24 y 72 horas. Si la apruebas, te citamos por el Discord para la whitelist de voz, así que no te salgas del servidor."],
   ["Me rechazaron la whitelist, ¿puedo volver a intentarlo?", "Sí, a los 3 días. Revisa lo que te dijeron y vuelve a leer la normativa antes de mandarla otra vez."],
-  ["¿El servidor es gratis?", "Sí, entrar es totalmente gratis. Las donaciones son voluntarias y no dan ventajas dentro del rol."],
+  ["¿El servidor es gratis?", "Sí, entrar es totalmente gratis. La tienda VIP es opcional: sirve para apoyar al servidor y llevarte carros, motos y otras cosas para tu personaje."],
+  ["¿Cómo compro algo de la tienda VIP?", "En la página VIP escoge el artículo y dale a «Pedir». Se copia un mensaje que pegas en tu ticket del Discord y el staff te explica cómo pagar."],
   ["¿Necesito tener GTA V original?", "Sí. Necesitas GTA V legal (Steam, Epic o Rockstar) y FiveM instalado."],
   ["¿Puedo entrar a la Policía, el Ejército, la Fiscalía o los EMS apenas llego?", "No. Primero necesitas la whitelist aprobada y luego postularte desde la sección de Postulaciones. Cada facción revisa sus solicitudes."],
   ["Me banearon y creo que fue injusto, ¿qué hago?", "Abre un ticket de apelación en el Discord con pruebas (clip o captura). Nada de reclamar por privado a los staff."],
@@ -18,7 +19,7 @@ export default function Faq() {
 
   return (
     <section id="faq" className="bloque">
-      <Cabecera num="06" titulo="Preguntas frecuentes" />
+      <Cabecera num="07" titulo="Preguntas frecuentes" />
 
       <div className="faq">
         {PREGUNTAS.map(([pregunta, respuesta], i) => (

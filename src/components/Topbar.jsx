@@ -9,14 +9,14 @@ const ENLACES = [
   ["normativa", "Normativa"],
   ["whitelist", "Whitelist"],
   ["postulaciones", "Postulaciones"],
+  ["vip", "VIP"],
   ["guias", "Guías"],
   ["faq", "Preguntas"],
 ];
 
-export default function Topbar() {
+export default function Topbar({ pagina }) {
   const [solida, setSolida] = useState(false);
   const [abierta, setAbierta] = useState(false);
-  const [activa, setActiva] = useState("");
 
   // barra de progreso de lectura
   const { scrollYProgress } = useScroll();
@@ -29,31 +29,22 @@ export default function Topbar() {
     return () => removeEventListener("scroll", pintar);
   }, []);
 
-  // resalta en el menú la sección visible
-  useEffect(() => {
-    const obs = new IntersectionObserver(entradas => {
-      entradas.forEach(e => e.isIntersecting && setActiva(e.target.id));
-    }, { rootMargin: "-45% 0px -50% 0px" });
-    document.querySelectorAll("main > section[id]").forEach(s => obs.observe(s));
-    return () => obs.disconnect();
-  }, []);
-
   return (
     <motion.header
-      className={`top ${solida ? "solida" : ""}`}
+      className={`top ${solida || pagina !== "inicio" ? "solida" : ""}`}
       initial={{ y: -90 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
     >
       <motion.div className="progreso" style={{ scaleX: progreso }} aria-hidden="true" />
       <div className="top-in">
-        <a href="#inicio" className="marca"><LogoAnimado mini className="marca-logo" width="200" height="112" /></a>
+        <a href="#inicio" className="marca" aria-label="Inicio"><LogoAnimado mini className="marca-logo" width="200" height="112" /></a>
 
         <nav className={`nav ${abierta ? "abierta" : ""}`}>
           {ENLACES.map(([id, texto]) => (
-            <a key={id} href={`#${id}`} className={activa === id ? "activo" : ""} onClick={() => setAbierta(false)}>
+            <a key={id} href={`#${id}`} className={`${pagina === id ? "activo" : ""} ${id === "vip" ? "nav-vip" : ""}`} onClick={() => setAbierta(false)}>
               {texto}
-              {activa === id && <motion.i className="nav-marca" layoutId="nav-marca" />}
+              {pagina === id && <motion.i className="nav-marca" layoutId="nav-marca" />}
             </a>
           ))}
         </nav>

@@ -47,7 +47,7 @@ export default function Guias() {
 
   return (
     <section id="guias" className="bloque bloque-alt">
-      <Cabecera num="05" titulo="Guías en video">Lo básico para no quedar perdido el primer día.</Cabecera>
+      <Cabecera num="06" titulo="Guías en video">Lo básico para no quedar perdido el primer día.</Cabecera>
 
       <div className="videos">
         {videos === null && [0, 1, 2].map(i => <div key={i} className="video-cargando" />)}

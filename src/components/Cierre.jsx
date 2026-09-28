@@ -45,6 +45,7 @@ export function Pie() {
           <a href="#normativa">Normativa</a>
           <a href="#whitelist">Whitelist</a>
           <a href="#postulaciones">Postulaciones</a>
+          <a href="#vip">Tienda VIP</a>
           <a href="#guias">Guías</a>
           <a href="#faq">Preguntas</a>
           <a href={DISCORD_URL} target="_blank" rel="noopener">Discord</a>
