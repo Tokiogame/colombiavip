@@ -1,0 +1,9 @@
+node_modules
+dist
+.vercel
+.netlify
+# originales pesados (GitHub no acepta archivos de más de 100 MB); la web usa public/img
+intro video
+gif line en movi
+gif de icono en movi
+Nueva carpeta

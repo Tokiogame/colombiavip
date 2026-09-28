@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel de staff · Colombia VIP</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#050505">
+  <link rel="icon" href="/img/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="admin">
+
+<!-- ============ LOGIN ============ -->
+<div id="vista-login" class="login">
+  <form id="form-login" class="formulario" novalidate>
+    <img src="/img/logo.webp" alt="Colombia VIP" width="160" height="88">
+    <p class="etiqueta">Panel de staff</p>
+    <label>Usuario
+      <input name="usuario" required autocomplete="username" autocapitalize="off" spellcheck="false">
+    </label>
+    <label>Contraseña
+      <input name="password" type="password" required autocomplete="current-password">
+    </label>
+    <div class="form-pie">
+      <button type="submit" class="btn">Entrar</button>
+      <p class="aviso" role="status"></p>
+    </div>
+  </form>
+</div>
+
+<!-- ============ PANEL ============ -->
+<div id="vista-panel" hidden>
+  <header class="adm-top">
+    <a href="index.html" class="marca"><img src="/img/logo.webp" alt="Colombia VIP" width="110" height="60"></a>
+    <nav class="adm-tabs" role="tablist">
+      <button role="tab" data-tab="solicitudes" aria-selected="true">Solicitudes <span class="badge" id="badge-pend" hidden></span></button>
+      <button role="tab" data-tab="facciones" aria-selected="false" data-roles="admin staff">Facciones</button>
+      <button role="tab" data-tab="videos" aria-selected="false" data-roles="admin staff">Videos</button>
+      <button role="tab" data-tab="staff" aria-selected="false" data-roles="admin">Staff</button>
+    </nav>
+    <div class="adm-user">
+      <span id="usuario"></span>
+      <span class="chip" id="mi-rol"></span>
+      <button class="btn btn-linea btn-mini" id="mi-clave" type="button">Mi contraseña</button>
+      <button class="btn btn-linea btn-mini" id="salir" type="button">Salir</button>
+    </div>
+  </header>
+
+  <main class="adm-main">
+
+    <!-- solicitudes -->
+    <section id="tab-solicitudes" class="tab">
+      <div class="adm-cab">
+        <h1>Solicitudes</h1>
+        <button class="btn btn-linea btn-mini" id="recargar-sol" type="button">Actualizar</button>
+      </div>
+      <div class="filtros">
+        <select id="f-tipo" aria-label="Tipo">
+          <option value="">Todas</option>
+          <option value="whitelist">Whitelist</option>
+        </select>
+        <select id="f-estado" aria-label="Estado">
+          <option value="pendiente">Pendientes</option>
+          <option value="aprobada">Aprobadas</option>
+          <option value="rechazada">Rechazadas</option>
+          <option value="">Todos los estados</option>
+        </select>
+        <input type="search" id="f-buscar" placeholder="Buscar por Discord o personaje…">
+      </div>
+      <div id="lista-sol" class="lista"></div>
+    </section>
+
+    <!-- facciones -->
+    <section id="tab-facciones" class="tab" hidden>
+      <div class="adm-cab">
+        <h1>Facciones</h1>
+        <button class="btn btn-mini" id="nueva-fac" type="button">Nueva facción</button>
+      </div>
+      <div id="lista-fac" class="lista"></div>
+    </section>
+
+    <!-- videos -->
+    <section id="tab-videos" class="tab" hidden>
+      <div class="adm-cab">
+        <h1>Guías en video</h1>
+        <button class="btn btn-mini" id="nuevo-vid" type="button">Agregar video</button>
+      </div>
+      <div id="lista-vid" class="lista"></div>
+    </section>
+
+    <!-- staff -->
+    <section id="tab-staff" class="tab" hidden>
+      <div class="adm-cab">
+        <h1>Usuarios del staff</h1>
+        <button class="btn btn-mini" id="nuevo-staff" type="button">Crear usuario</button>
+      </div>
+      <div id="lista-staff" class="lista"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ DETALLE SOLICITUD ============ -->
+<dialog id="dlg-sol" class="modal">
+  <div class="formulario">
+    <button type="button" class="cerrar" aria-label="Cerrar">×</button>
+    <p class="etiqueta" id="sol-tipo"></p>
+    <h3 id="sol-titulo"></h3>
+    <div class="sol-meta" id="sol-meta"></div>
+    <div class="sol-datos" id="sol-datos"></div>
+    <label>Nota interna del staff
+      <textarea id="sol-nota" rows="2" placeholder="Solo la ve el staff"></textarea>
+    </label>
+    <div class="form-pie">
+      <button type="button" class="btn btn-ok" data-estado="aprobada">Aprobar</button>
+      <button type="button" class="btn btn-mal" data-estado="rechazada">Rechazar</button>
+      <button type="button" class="btn btn-linea" data-estado="pendiente">Dejar pendiente</button>
+      <button type="button" class="btn-texto" id="sol-borrar" data-roles="admin staff">Eliminar</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ============ EDITAR FACCIÓN ============ -->
+<dialog id="dlg-fac" class="modal">
+  <form id="form-fac" class="formulario" novalidate>
+    <button type="button" class="cerrar" aria-label="Cerrar">×</button>
+    <p class="etiqueta">Facción</p>
+    <h3 id="fac-titulo">Nueva facción</h3>
+
+    <fieldset>
+      <legend><span>A</span> Datos</legend>
+      <div class="fila">
+        <label>Nombre
+          <input name="nombre" required placeholder="Policía Nacional">
+        </label>
+        <label>Subtítulo / sigla
+          <input name="sigla" placeholder="PONAL">
+        </label>
+      </div>
+      <label>Descripción
+        <textarea name="descripcion" rows="2" required></textarea>
+      </label>
+      <div class="fila fila-3">
+        <label>Color
+          <input name="color" type="color" value="#e0b02c">
+        </label>
+        <label>Ícono
+          <select name="icono">
+            <option value="escudo">Escudo</option>
+            <option value="cruz">Cruz</option>
+            <option value="estrella">Estrella</option>
+            <option value="balanza">Balanza</option>
+          </select>
+        </label>
+        <label>Orden
+          <input name="orden" type="number" value="0">
+        </label>
+      </div>
+      <label class="check">
+        <input type="checkbox" name="abierta" checked>
+        Postulaciones abiertas
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend><span>B</span> Requisitos</legend>
+      <label>Uno por línea
+        <textarea name="requisitos" rows="4" placeholder="Whitelist aprobada&#10;Mínimo 2 semanas en la ciudad"></textarea>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend><span>C</span> Preguntas</legend>
+      <div id="fac-preguntas"></div>
+      <button type="button" class="btn btn-linea btn-mini" id="agregar-pregunta">+ Agregar pregunta</button>
+    </fieldset>
+
+    <fieldset>
+      <legend><span>D</span> Discord (opcional)</legend>
+      <label>Webhook propio de la facción <span class="min">si lo dejas vacío usa el general</span>
+        <input name="webhook" placeholder="https://discord.com/api/webhooks/…">
+      </label>
+      <label>ID del rol a mencionar
+        <input name="rol" placeholder="123456789012345678">
+      </label>
+    </fieldset>
+
+    <div class="form-pie">
+      <button type="submit" class="btn">Guardar</button>
+      <p class="aviso" role="status"></p>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============ EDITAR VIDEO ============ -->
+<dialog id="dlg-vid" class="modal">
+  <form id="form-vid" class="formulario" novalidate>
+    <button type="button" class="cerrar" aria-label="Cerrar">×</button>
+    <p class="etiqueta">Guía en video</p>
+    <h3 id="vid-titulo">Agregar video</h3>
+    <label>Link de YouTube
+      <input name="link" required placeholder="https://www.youtube.com/watch?v=…">
+    </label>
+    <div class="vid-preview" id="vid-preview"></div>
+    <label>Título
+      <input name="titulo" required placeholder="Cómo instalar FiveM y conectarte">
+    </label>
+    <label>Descripción corta
+      <input name="descripcion" placeholder="Desde cero, con el F8 y el connect.">
+    </label>
+    <div class="form-pie">
+      <button type="submit" class="btn">Guardar</button>
+      <p class="aviso" role="status"></p>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============ USUARIO STAFF ============ -->
+<dialog id="dlg-staff" class="modal modal-mini">
+  <form id="form-staff" class="formulario" novalidate>
+    <button type="button" class="cerrar" aria-label="Cerrar">×</button>
+    <p class="etiqueta">Staff</p>
+    <h3 id="staff-titulo">Crear usuario</h3>
+    <label id="staff-campo-usuario">Usuario
+      <input name="usuario" required autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="juan">
+    </label>
+    <label id="staff-campo-rol">Rol
+      <select name="rol">
+        <option value="entrevistador">Entrevistador · ve y responde solicitudes</option>
+        <option value="staff">Staff · solicitudes, facciones y videos</option>
+        <option value="admin">Admin · todo, incluido el staff</option>
+      </select>
+    </label>
+    <label>Contraseña <span class="min" id="staff-nota-clave">mínimo 6 caracteres</span>
+      <input name="clave" type="password" autocomplete="new-password">
+    </label>
+    <label>Repite la contraseña
+      <input name="clave2" type="password" autocomplete="new-password">
+    </label>
+    <div class="form-pie">
+      <button type="submit" class="btn">Guardar</button>
+      <p class="aviso" role="status"></p>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script type="module" src="/src/admin/admin.js"></script>
+</body>
+</html>
