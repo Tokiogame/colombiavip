@@ -46,7 +46,7 @@ export default function Guias() {
   }, []);
 
   return (
-    <section id="guias" className="bloque bloque-alt">
+    <section id="guias" className="bloque">
       <Cabecera num="06" titulo="Guías en video">Lo básico para no quedar perdido el primer día.</Cabecera>
 
       <div className="videos">

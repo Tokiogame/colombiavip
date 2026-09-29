@@ -74,7 +74,7 @@ export default function Vip() {
   }, []);
 
   return (
-    <section id="vip" className="bloque">
+    <section id="vip" className="bloque bloque-alt">
       <Cabecera num="05" titulo="Tienda VIP">
         Apoya al servidor y llévate algo exclusivo para tu personaje. Para comprar, {VIP_TICKET} y el staff te atiende.
       </Cabecera>

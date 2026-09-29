@@ -18,7 +18,7 @@ export default function Faq() {
   const [abierta, setAbierta] = useState(-1);
 
   return (
-    <section id="faq" className="bloque">
+    <section id="faq" className="bloque bloque-alt">
       <Cabecera num="07" titulo="Preguntas frecuentes" />
 
       <div className="faq">

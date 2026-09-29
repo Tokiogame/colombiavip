@@ -14,9 +14,10 @@ const ENLACES = [
   ["faq", "Preguntas"],
 ];
 
-export default function Topbar({ pagina }) {
+export default function Topbar() {
   const [solida, setSolida] = useState(false);
   const [abierta, setAbierta] = useState(false);
+  const [activa, setActiva] = useState("");
 
   // barra de progreso de lectura
   const { scrollYProgress } = useScroll();
@@ -29,9 +30,18 @@ export default function Topbar({ pagina }) {
     return () => removeEventListener("scroll", pintar);
   }, []);
 
+  // resalta en el menú la sección visible
+  useEffect(() => {
+    const obs = new IntersectionObserver(entradas => {
+      entradas.forEach(e => e.isIntersecting && setActiva(e.target.id));
+    }, { rootMargin: "-45% 0px -50% 0px" });
+    document.querySelectorAll("main > section[id]").forEach(s => obs.observe(s));
+    return () => obs.disconnect();
+  }, []);
+
   return (
     <motion.header
-      className={`top ${solida || pagina !== "inicio" ? "solida" : ""}`}
+      className={`top ${solida ? "solida" : ""}`}
       initial={{ y: -90 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
@@ -42,9 +52,9 @@ export default function Topbar({ pagina }) {
 
         <nav className={`nav ${abierta ? "abierta" : ""}`}>
           {ENLACES.map(([id, texto]) => (
-            <a key={id} href={`#${id}`} className={`${pagina === id ? "activo" : ""} ${id === "vip" ? "nav-vip" : ""}`} onClick={() => setAbierta(false)}>
+            <a key={id} href={`#${id}`} className={`${activa === id ? "activo" : ""} ${id === "vip" ? "nav-vip" : ""}`} onClick={() => setAbierta(false)}>
               {texto}
-              {pagina === id && <motion.i className="nav-marca" layoutId="nav-marca" />}
+              {activa === id && <motion.i className="nav-marca" layoutId="nav-marca" />}
             </a>
           ))}
         </nav>
