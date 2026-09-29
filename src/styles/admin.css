@@ -193,6 +193,23 @@ button.item:hover { border-color: var(--linea); background: var(--tarjeta-2); }
 .vid-preview img { width: 220px; border-radius: 8px; display: block; }
 .vid-preview p { font-size: 13px; color: var(--error); }
 
+.vip-foto { margin-bottom: 22px; }
+.vip-foto legend {
+  display: block;
+  font: 500 15px var(--f-texto);
+  text-transform: none;
+  letter-spacing: 0;
+  border: 0;
+  padding: 0;
+  margin-bottom: 10px;
+}
+.vip-foto legend .min { display: inline; width: auto; height: auto; background: none; color: var(--gris); font: 400 12px var(--f-mono); }
+.vip-foto .vid-preview { margin: 0 0 14px; }
+.vip-foto .vid-preview img { width: 260px; max-width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.vip-foto-acc { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.vip-foto-acc .btn { cursor: pointer; margin: 0; }
+.vip-foto-acc .btn-texto { margin: 0; }
+
 .modal-mini { width: min(460px, calc(100vw - 24px)); }
 .chip.tu { background: rgba(224, 176, 44, .12); color: var(--oro); }
 .chip.rol-admin { background: rgba(224, 176, 44, .16); color: var(--oro-claro); }

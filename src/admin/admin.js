@@ -557,7 +557,11 @@ listaCat.addEventListener("click", async e => {
         ? `¿Eliminar la categoría ${c.nombre} y sus ${n} ${n === 1 ? "artículo" : "artículos"}? No se puede deshacer.`
         : `¿Eliminar la categoría ${c.nombre}?`;
       if (!confirm(aviso)) return;
-      if (n) await q(db.from("vip").delete().eq("categoria", c.id));
+      if (n) {
+        const fotos = articulos.filter(a => a.categoria === c.id).map(a => a.imagen);
+        await q(db.from("vip").delete().eq("categoria", c.id));
+        fotos.forEach(borrarFoto);
+      }
       await q(db.from("vip_categorias").delete().eq("id", c.id));
       mostrarToast(`Categoría ${c.nombre} eliminada.`);
     }
@@ -671,17 +675,89 @@ listaVip.addEventListener("click", async e => {
     if (b.dataset.acc === "borrar") {
       if (!confirm(`¿Eliminar «${a.nombre}» de la tienda?`)) return;
       await q(db.from("vip").delete().eq("id", a.id));
+      borrarFoto(a.imagen);
       mostrarToast(`${a.nombre} eliminado.`);
     }
     cargarVip();
   } catch (err) { fallo(err); }
 });
 
-function pintarPreviewVip() {
-  const url = imagenVip(formVip.elements.imagen.value.trim());
-  previewVip.innerHTML = url ? `<img src="${esc(url)}" alt="" onerror="this.outerHTML='<p>No se pudo cargar esa imagen.</p>'">` : "";
+/* ---------- imagen: adjunta (va a Supabase Storage) o por link ---------- */
+const quitarFoto = $("#vip-quitar-foto");
+let fotoNueva = null;      // imagen adjunta que se sube al guardar
+let fotoNuevaUrl = "";     // vista previa local de esa imagen
+
+// en qué parte del bucket "vip" está una foto subida (null si es un link externo)
+function rutaFoto(url) {
+  const marca = "/storage/v1/object/public/vip/";
+  return url?.startsWith(SUPABASE_URL) && url.includes(marca) ? decodeURIComponent(url.split(marca)[1]) : null;
 }
-formVip.elements.imagen.addEventListener("input", pintarPreviewVip);
+
+// borra del bucket una foto que ya no se usa (si falla, solo queda el archivo huérfano)
+async function borrarFoto(url) {
+  const ruta = rutaFoto(url);
+  if (ruta) await db.storage.from("vip").remove([ruta]).catch(console.error);
+}
+
+// achica la imagen a máximo 1200 px y la pasa a WebP para que la tienda cargue rápido
+async function comprimir(archivo) {
+  const bmp = await createImageBitmap(archivo);
+  const escala = Math.min(1, 1200 / Math.max(bmp.width, bmp.height));
+  const lienzo = document.createElement("canvas");
+  lienzo.width = Math.round(bmp.width * escala);
+  lienzo.height = Math.round(bmp.height * escala);
+  lienzo.getContext("2d").drawImage(bmp, 0, 0, lienzo.width, lienzo.height);
+  bmp.close();
+  // si el navegador no sabe hacer WebP devuelve PNG
+  return new Promise(ok => lienzo.toBlob(ok, "image/webp", 0.85));
+}
+
+function soltarFotoNueva() {
+  if (fotoNuevaUrl) URL.revokeObjectURL(fotoNuevaUrl);
+  fotoNueva = null;
+  fotoNuevaUrl = "";
+  formVip.elements.archivo.value = "";
+}
+
+function pintarPreviewVip() {
+  const url = fotoNuevaUrl || imagenVip(formVip.elements.imagen.value.trim());
+  previewVip.innerHTML = url ? `<img src="${esc(url)}" alt="" onerror="this.outerHTML='<p>No se pudo cargar esa imagen.</p>'">` : "";
+  quitarFoto.hidden = !url;
+}
+
+formVip.elements.imagen.addEventListener("input", () => {
+  soltarFotoNueva();
+  pintarPreviewVip();
+});
+
+formVip.elements.archivo.addEventListener("change", async e => {
+  const archivo = e.target.files[0];
+  if (!archivo) return;
+  if (!archivo.type.startsWith("image/")) return avisar(formVip, "Ese archivo no es una imagen.", "mal");
+  if (archivo.size > 15 * 1024 * 1024) return avisar(formVip, "La imagen pesa más de 15 MB.", "mal");
+
+  avisar(formVip, "Preparando imagen…");
+  try {
+    const blob = await comprimir(archivo);
+    soltarFotoNueva();
+    fotoNueva = blob;
+    fotoNuevaUrl = URL.createObjectURL(blob);
+    formVip.elements.imagen.value = "";
+    avisar(formVip, "");
+    pintarPreviewVip();
+  } catch (err) {
+    console.error(err);
+    avisar(formVip, "No se pudo leer esa imagen. Prueba con otra (PNG o JPG).", "mal");
+  }
+});
+
+quitarFoto.addEventListener("click", () => {
+  soltarFotoNueva();
+  formVip.elements.imagen.value = "";
+  pintarPreviewVip();
+});
+
+dlgVip.addEventListener("close", soltarFotoNueva);
 
 function abrirVip(a) {
   vipActual = a || null;
@@ -702,6 +778,7 @@ function abrirVip(a) {
   el.destacado.checked = !!a?.destacado;
   el.agotado.checked = !!a?.agotado;
 
+  soltarFotoNueva();
   pintarPreviewVip();
   dlgVip.showModal();
   dlgVip.scrollTop = 0;
@@ -731,14 +808,38 @@ formVip.addEventListener("submit", async e => {
 
   const boton = $("button[type=submit]", formVip);
   boton.disabled = true;
-  avisar(formVip, "Guardando…");
+  avisar(formVip, fotoNueva ? "Subiendo imagen…" : "Guardando…");
+  let subida = null;
   try {
+    if (fotoNueva) {
+      const ext = fotoNueva.type === "image/webp" ? "webp" : "png";
+      subida = `${crypto.randomUUID()}.${ext}`;
+      const { error } = await db.storage.from("vip").upload(subida, fotoNueva, {
+        contentType: fotoNueva.type,
+        cacheControl: "31536000",
+      });
+      if (error) {
+        subida = null;
+        throw new Error(/bucket/i.test(error.message)
+          ? "falta crear la carpeta de imágenes: ejecuta supabase/schema.sql en Supabase."
+          : error.message);
+      }
+      datos.imagen = db.storage.from("vip").getPublicUrl(subida).data.publicUrl;
+      avisar(formVip, "Guardando…");
+    }
+
     if (vipActual) await q(db.from("vip").update(datos).eq("id", vipActual.id));
     else await q(db.from("vip").insert(datos));
+    subida = null;
+
+    // si cambió la foto, la anterior ya no sirve
+    if (vipActual?.imagen && vipActual.imagen !== datos.imagen) borrarFoto(vipActual.imagen);
     dlgVip.close();
     mostrarToast(`${datos.nombre} guardado.`);
     cargarVip();
   } catch (err) {
+    // la foto se alcanzó a subir pero el artículo no se guardó: no dejarla suelta
+    if (subida) db.storage.from("vip").remove([subida]).catch(console.error);
     avisar(formVip, "No se pudo guardar: " + err.message, "mal");
   } finally {
     boton.disabled = false;

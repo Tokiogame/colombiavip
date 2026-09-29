@@ -368,6 +368,29 @@ insert into public.vip_categorias (id, nombre, icono, orden) values
 on conflict (id) do nothing;
 
 
+-- ---------- imágenes de la tienda VIP (Storage) ----------
+-- carpeta pública "vip": cualquiera ve las fotos, solo admin y staff suben o borran
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('vip', 'vip', true, 5242880, array['image/webp', 'image/png', 'image/jpeg', 'image/gif'])
+on conflict (id) do nothing;
+
+drop policy if exists "vip fotos: leer" on storage.objects;
+create policy "vip fotos: leer" on storage.objects
+  for select using (bucket_id = 'vip');
+
+drop policy if exists "vip fotos: subir" on storage.objects;
+create policy "vip fotos: subir" on storage.objects
+  for insert with check (bucket_id = 'vip' and public.tiene_rol('admin', 'staff'));
+
+drop policy if exists "vip fotos: cambiar" on storage.objects;
+create policy "vip fotos: cambiar" on storage.objects
+  for update using (bucket_id = 'vip' and public.tiene_rol('admin', 'staff'));
+
+drop policy if exists "vip fotos: borrar" on storage.objects;
+create policy "vip fotos: borrar" on storage.objects
+  for delete using (bucket_id = 'vip' and public.tiene_rol('admin', 'staff'));
+
+
 -- ---------- permisos de las tablas (las políticas de arriba deciden qué filas) ----------
 grant select on public.videos, public.facciones to anon, authenticated;
 grant insert on public.solicitudes to anon, authenticated;

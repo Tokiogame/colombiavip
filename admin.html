@@ -248,10 +248,20 @@
     <label>Qué incluye <span class="min">uno por línea</span>
       <textarea name="incluye" rows="3" placeholder="Placa personalizada&#10;Maletero grande"></textarea>
     </label>
-    <label>Link de la imagen <span class="min">opcional · sin imagen se muestra el ícono</span>
-      <input name="imagen" placeholder="https://i.imgur.com/….png">
-    </label>
-    <div class="vid-preview" id="vip-preview"></div>
+    <fieldset class="vip-foto">
+      <legend>Imagen <span class="min">opcional · sin imagen se muestra el ícono</span></legend>
+      <div class="vid-preview" id="vip-preview"></div>
+      <div class="vip-foto-acc">
+        <label class="btn btn-linea btn-mini">
+          Adjuntar imagen
+          <input name="archivo" type="file" accept="image/png, image/jpeg, image/webp, image/gif" hidden>
+        </label>
+        <button type="button" class="btn-texto" id="vip-quitar-foto" hidden>Quitar imagen</button>
+      </div>
+      <label>…o pega un link
+        <input name="imagen" placeholder="https://i.imgur.com/….png">
+      </label>
+    </fieldset>
     <label class="check">
       <input type="checkbox" name="destacado">
       Marcar como «Más vendido»
