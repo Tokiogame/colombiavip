@@ -887,6 +887,9 @@ legend span {
 .pie-nav a:hover { color: var(--oro-claro); }
 .pie-legal { max-width: var(--ancho); margin: 22px auto 0; font-size: 13px; color: var(--gris); }
 .pie-legal .oculto { color: inherit; text-decoration: none; cursor: text; }  /* entrada al panel de staff */
+.pie-autor { float: right; }
+.pie-autor b { color: var(--oro); font-weight: 600; }
+@media (max-width: 640px) { .pie-autor { float: none; display: block; margin-top: 6px; } }
 
 /* ---------- aviso flotante ---------- */
 .toast {

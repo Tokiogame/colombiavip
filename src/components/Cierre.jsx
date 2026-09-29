@@ -54,6 +54,7 @@ export function Pie() {
       </div>
       <p className="pie-legal">
         © {new Date().getFullYear()} <a href="admin.html" className="oculto">Colombia VIP</a> · Servidor de rol en FiveM. GTA V es marca de Rockstar Games.
+        <span className="pie-autor">Web hecha por <b>Pope (Ñato)</b></span>
       </p>
     </footer>
   );
