@@ -87,6 +87,16 @@
     <section id="tab-vip" class="tab" hidden>
       <div class="adm-cab">
         <h1>Tienda VIP</h1>
+      </div>
+
+      <div class="adm-cab adm-sub">
+        <h2>Categorías</h2>
+        <button class="btn btn-linea btn-mini" id="nueva-cat" type="button">Nueva categoría</button>
+      </div>
+      <div id="lista-cat" class="lista"></div>
+
+      <div class="adm-cab adm-sub">
+        <h2>Artículos</h2>
         <button class="btn btn-mini" id="nuevo-vip" type="button">Agregar artículo</button>
       </div>
       <div class="filtros">
@@ -249,6 +259,25 @@
     <label class="check">
       <input type="checkbox" name="agotado">
       Agotado (se ve, pero no se puede pedir)
+    </label>
+    <div class="form-pie">
+      <button type="submit" class="btn">Guardar</button>
+      <p class="aviso" role="status"></p>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============ CATEGORÍA VIP ============ -->
+<dialog id="dlg-cat" class="modal modal-mini">
+  <form id="form-cat" class="formulario" novalidate>
+    <button type="button" class="cerrar" aria-label="Cerrar">×</button>
+    <p class="etiqueta">Tienda VIP</p>
+    <h3 id="cat-titulo">Nueva categoría</h3>
+    <label>Nombre
+      <input name="nombre" required maxlength="40" placeholder="Helicópteros">
+    </label>
+    <label>Ícono
+      <select name="icono"></select>
     </label>
     <div class="form-pie">
       <button type="submit" class="btn">Guardar</button>

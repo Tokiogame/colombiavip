@@ -1,9 +1,8 @@
 /* ============================================
    TIENDA VIP
    ============================================
-   Los artículos se manejan desde el panel (admin.html > Tienda VIP).
-   Aquí quedan las categorías (pestañas) y unos artículos de respaldo
-   que solo se muestran si Supabase no responde.
+   Categorías y artículos se manejan desde el panel (admin.html > Tienda VIP).
+   Los de aquí son de respaldo: solo se muestran si Supabase no responde.
 */
 
 import { img } from "../lib/supabase.js";
@@ -14,7 +13,20 @@ export const imagenVip = v => (!v ? "" : /^https?:\/\//i.test(v) ? v : img(`vip/
 // canal o forma de abrir ticket que se le explica al jugador
 export const VIP_TICKET = "abre un ticket en el canal #tienda-vip del Discord";
 
-export const CATEGORIAS = [
+// íconos que se pueden escoger para una categoría (los dibujos están en Vip.jsx)
+export const ICONOS_VIP = {
+  carro: "Carro",
+  moto: "Moto",
+  casa: "Casa",
+  barco: "Barco",
+  avion: "Avión",
+  dinero: "Dinero",
+  ropa: "Ropa",
+  estrella: "Estrella",
+};
+
+// respaldo: solo si Supabase no responde o falta crear la tabla
+export const CATEGORIAS_RESPALDO = [
   { id: "carros", nombre: "Carros", icono: "carro" },
   { id: "motos", nombre: "Motos", icono: "moto" },
   { id: "casas", nombre: "Casas", icono: "casa" },

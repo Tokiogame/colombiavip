@@ -6,7 +6,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL, SUPABASE_KEY } from "../config.js";
 import { sb } from "../lib/supabase.js";
-import { CATEGORIAS, imagenVip } from "../data/vip.js";
+import { ICONOS_VIP, imagenVip } from "../data/vip.js";
 import "../styles/style.css";
 import "../styles/admin.css";
 
@@ -490,13 +490,134 @@ let articulos = [];
 let vipActual = null;
 
 const pesos = n => "$" + Number(n).toLocaleString("es-CO");
-const nombreCat = id => CATEGORIAS.find(c => c.id === id)?.nombre || id;
+const nombreCat = id => categorias.find(c => c.id === id)?.nombre || id;
 
-const opcionesCat = CATEGORIAS.map(c => `<option value="${esc(c.id)}">${esc(c.nombre)}</option>`).join("");
-fVipCat.insertAdjacentHTML("beforeend", opcionesCat);
-formVip.elements.categoria.innerHTML = opcionesCat;
+/* ---------- categorías (pestañas de la tienda) ---------- */
+const listaCat = $("#lista-cat");
+const dlgCat = $("#dlg-cat");
+const formCat = $("#form-cat");
+let categorias = [];
+let catActual = null;
 
+formCat.elements.icono.innerHTML = Object.entries(ICONOS_VIP)
+  .map(([id, nombre]) => `<option value="${id}">${nombre}</option>`).join("");
+
+async function cargarCategorias() {
+  try {
+    categorias = await q(db.from("vip_categorias").select("*").order("orden"));
+  } catch (err) {
+    categorias = [];
+    listaCat.innerHTML = err.code === "42P01" || err.code === "PGRST205"
+      ? '<p class="vacia">Falta crear la tabla «vip_categorias»: ejecuta supabase/schema.sql en el SQL Editor.</p>'
+      : '<p class="vacia">No se pudieron cargar las categorías.</p>';
+    fallo(err);
+  }
+  if (categorias.length) pintarCategorias();
+  else if (!listaCat.innerHTML.includes("Falta")) listaCat.innerHTML = '<p class="vacia">No hay categorías. Crea la primera.</p>';
+
+  // los selects de artículos muestran las categorías actuales
+  const opciones = categorias.map(c => `<option value="${esc(c.id)}">${esc(c.nombre)}</option>`).join("");
+  const elegido = fVipCat.value;
+  fVipCat.innerHTML = '<option value="">Todas las categorías</option>' + opciones;
+  fVipCat.value = categorias.some(c => c.id === elegido) ? elegido : "";
+  formVip.elements.categoria.innerHTML = opciones;
+}
+
+function pintarCategorias() {
+  listaCat.innerHTML = categorias.map((c, i) => {
+    const n = articulos.filter(a => a.categoria === c.id).length;
+    return `
+    <div class="item">
+      <span class="item-txt">
+        <b>${esc(c.nombre)}</b>
+        <small>${n} ${n === 1 ? "artículo" : "artículos"} · ícono: ${esc(ICONOS_VIP[c.icono] || c.icono)}</small>
+      </span>
+      <span class="item-acc">
+        <button type="button" data-acc="subir" data-i="${i}" ${i === 0 ? "disabled" : ""} aria-label="Subir">↑</button>
+        <button type="button" data-acc="bajar" data-i="${i}" ${i === categorias.length - 1 ? "disabled" : ""} aria-label="Bajar">↓</button>
+        <button type="button" data-acc="editar" data-i="${i}">Editar</button>
+        <button type="button" data-acc="borrar" data-i="${i}" class="peligro">Eliminar</button>
+      </span>
+    </div>`;
+  }).join("");
+}
+
+listaCat.addEventListener("click", async e => {
+  const b = e.target.closest("[data-acc]");
+  if (!b) return;
+  const i = +b.dataset.i;
+  const c = categorias[i];
+
+  try {
+    if (b.dataset.acc === "editar") return abrirCategoria(c);
+
+    if (b.dataset.acc === "borrar") {
+      const n = articulos.filter(a => a.categoria === c.id).length;
+      const aviso = n
+        ? `¿Eliminar la categoría ${c.nombre} y sus ${n} ${n === 1 ? "artículo" : "artículos"}? No se puede deshacer.`
+        : `¿Eliminar la categoría ${c.nombre}?`;
+      if (!confirm(aviso)) return;
+      if (n) await q(db.from("vip").delete().eq("categoria", c.id));
+      await q(db.from("vip_categorias").delete().eq("id", c.id));
+      mostrarToast(`Categoría ${c.nombre} eliminada.`);
+    }
+
+    if (b.dataset.acc === "subir" || b.dataset.acc === "bajar") {
+      // reescribe el orden completo para que no queden empates
+      const orden = [...categorias];
+      const j = b.dataset.acc === "subir" ? i - 1 : i + 1;
+      [orden[i], orden[j]] = [orden[j], orden[i]];
+      await Promise.all(orden.map((x, n) => q(db.from("vip_categorias").update({ orden: n + 1 }).eq("id", x.id))));
+    }
+    cargarVip();
+  } catch (err) { fallo(err); }
+});
+
+function abrirCategoria(c) {
+  catActual = c || null;
+  formCat.reset();
+  avisar(formCat, "");
+  $("#cat-titulo").textContent = c ? c.nombre : "Nueva categoría";
+  formCat.elements.nombre.value = c?.nombre || "";
+  formCat.elements.icono.value = c?.icono || "estrella";
+  dlgCat.showModal();
+  formCat.elements.nombre.focus();
+}
+
+$("#nueva-cat").addEventListener("click", () => abrirCategoria());
+
+formCat.addEventListener("submit", async e => {
+  e.preventDefault();
+  const nombre = formCat.elements.nombre.value.trim();
+  if (!nombre) return avisar(formCat, "Ponle un nombre.", "mal");
+  const datos = { nombre, icono: formCat.elements.icono.value };
+
+  const boton = $("button[type=submit]", formCat);
+  boton.disabled = true;
+  avisar(formCat, "Guardando…");
+  try {
+    if (catActual) {
+      await q(db.from("vip_categorias").update(datos).eq("id", catActual.id));
+    } else {
+      // el id sale del nombre; si ya existe se le agrega un número
+      const base = slug(nombre).slice(0, 36) || "categoria";
+      let id = base;
+      for (let n = 2; categorias.some(c => c.id === id); n++) id = `${base}-${n}`;
+      await q(db.from("vip_categorias").insert({ id, ...datos, orden: Math.max(0, ...categorias.map(c => c.orden)) + 1 }));
+    }
+    dlgCat.close();
+    mostrarToast(`Categoría ${nombre} guardada.`);
+    cargarVip();
+  } catch (err) {
+    avisar(formCat, "No se pudo guardar: " + err.message, "mal");
+  } finally {
+    boton.disabled = false;
+  }
+});
+
+/* ---------- artículos ---------- */
 async function cargarVip() {
+  await cargarCategorias();
   try {
     articulos = await q(db.from("vip").select("*").order("categoria").order("orden"));
   } catch (err) {
@@ -506,6 +627,7 @@ async function cargarVip() {
     return fallo(err);
   }
   pintarVip();
+  if (categorias.length) pintarCategorias();  // actualiza cuántos artículos tiene cada una
 }
 
 function pintarVip() {
@@ -568,7 +690,8 @@ function abrirVip(a) {
   $("#vip-titulo").textContent = a ? a.nombre : "Agregar artículo";
 
   const el = formVip.elements;
-  const cat = a?.categoria || fVipCat.value || CATEGORIAS[0].id;
+  if (!categorias.length) return mostrarToast("Primero crea una categoría.");
+  const cat = a?.categoria || fVipCat.value || categorias[0].id;
   el.nombre.value = a?.nombre || "";
   el.categoria.value = cat;
   el.precio.value = a?.precio ?? "";

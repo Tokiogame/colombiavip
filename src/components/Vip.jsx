@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { DISCORD_URL } from "../config.js";
-import { CATEGORIAS, ARTICULOS_RESPALDO, VIP_TICKET, imagenVip } from "../data/vip.js";
+import { CATEGORIAS_RESPALDO, ARTICULOS_RESPALDO, VIP_TICKET, imagenVip } from "../data/vip.js";
 import { sb } from "../lib/supabase.js";
 import { Aparecer, Cabecera, Tarjeta3D, useToast } from "./ui.jsx";
 
@@ -9,6 +9,10 @@ const ICONOS = {
   carro: <><path d="M3 16v-4l2.2-5A2 2 0 0 1 7 6h10a2 2 0 0 1 1.8 1l2.2 5v4" /><path d="M3 12h18M3 16h18" /><circle cx="7" cy="16.5" r="1.8" /><circle cx="17" cy="16.5" r="1.8" /></>,
   moto: <><circle cx="5.5" cy="16" r="3.5" /><circle cx="18.5" cy="16" r="3.5" /><path d="M5.5 16 9 9h5l4.5 7M14 9l-1.5-3H10M9 9l3 7h6" /></>,
   casa: <><path d="m3 11 9-7 9 7" /><path d="M5 10v10h14V10M10 20v-6h4v6" /></>,
+  barco: <><path d="M3 15h18l-2.5 5h-13zM12 3v12M12 4l6 8h-6" /></>,
+  avion: <path d="M10.5 3.5a1.5 1.5 0 0 1 3 0V9l7.5 4.5V16l-7.5-2.5V18l2 1.5V21L12 20l-3.5 1v-1.5l2-1.5v-4.5L3 16v-2.5L10.5 9z" />,
+  dinero: <><rect x="2.5" y="6" width="19" height="12" rx="2" /><circle cx="12" cy="12" r="2.8" /><path d="M6 9.5v5M18 9.5v5" /></>,
+  ropa: <path d="M9 3 4 5.5 2.5 10l3 1.3V21h13v-9.7l3-1.3L20 5.5 15 3a3 3 0 0 1-6 0z" />,
   estrella: <path d="m12 2 2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z" />,
 };
 
@@ -60,16 +64,28 @@ function Articulo({ a, icono }) {
 }
 
 export default function Vip() {
-  const [cat, setCat] = useState(CATEGORIAS[0].id);
+  const [elegida, setElegida] = useState(null);
+  const [categorias, setCategorias] = useState(sb ? [] : CATEGORIAS_RESPALDO);
   const [todos, setTodos] = useState(sb ? null : ARTICULOS_RESPALDO);
-  const categoria = CATEGORIAS.find(c => c.id === cat);
+  // si la elegida ya no existe (o aún no hay), queda la primera
+  const categoria = categorias.find(c => c.id === elegida) ?? categorias[0];
+  const cat = categoria?.id;
   const articulos = todos?.filter(a => a.categoria === cat);
 
-  // los artículos se editan en el panel; si la tabla no existe quedan los de respaldo
+  // categorías y artículos se editan en el panel; si las tablas no existen quedan los de respaldo
   useEffect(() => {
     if (!sb) return;
-    sb.from("vip").select("*").order("orden").then(({ data, error }) => {
-      setTodos(error ? ARTICULOS_RESPALDO : data);
+    Promise.all([
+      sb.from("vip_categorias").select("*").order("orden"),
+      sb.from("vip").select("*").order("orden"),
+    ]).then(([c, a]) => {
+      if (a.error) {
+        setCategorias(CATEGORIAS_RESPALDO);
+        setTodos(ARTICULOS_RESPALDO);
+        return;
+      }
+      setCategorias(c.error ? CATEGORIAS_RESPALDO : c.data);
+      setTodos(a.data);
     });
   }, []);
 
@@ -86,9 +102,9 @@ export default function Vip() {
       </Aparecer>
 
       <div className="vip-tabs" role="tablist">
-        {CATEGORIAS.map(c => (
+        {categorias.map(c => (
           <button key={c.id} type="button" role="tab" aria-selected={cat === c.id}
-            className={cat === c.id ? "activa" : ""} onClick={() => setCat(c.id)}>
+            className={cat === c.id ? "activa" : ""} onClick={() => setElegida(c.id)}>
             <Icono nombre={c.icono} />
             {c.nombre}
             {cat === c.id && <motion.i className="vip-tab-fondo" layoutId="vip-tab" transition={{ type: "spring", stiffness: 400, damping: 34 }} />}
@@ -105,7 +121,8 @@ export default function Vip() {
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.25 }}
         >
-          {articulos === undefined ? [0, 1, 2].map(i => <div key={i} className="video-cargando" />)
+          {todos === null ? [0, 1, 2].map(i => <div key={i} className="video-cargando" />)
+            : !categoria ? <p className="vip-vacio">Pronto abriremos la tienda.</p>
             : articulos.length
             ? articulos.map(a => <Articulo key={a.id ?? a.nombre} a={a} icono={categoria.icono} />)
             : <p className="vip-vacio">Pronto habrá artículos en esta categoría.</p>}

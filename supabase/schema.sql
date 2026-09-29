@@ -312,7 +312,7 @@ create policy "solicitudes: admin borra" on public.solicitudes
 
 
 -- ---------- tienda VIP ----------
--- categoria: carros, motos, casas u otros (las pestañas están en src/data/vip.js)
+-- categoria: el id de una fila de vip_categorias (carros, motos…)
 create table if not exists public.vip (
   id          uuid primary key default gen_random_uuid(),
   categoria   text not null default 'carros',
@@ -338,6 +338,34 @@ create policy "vip: admin escribe" on public.vip
 
 grant select on public.vip to anon, authenticated;
 grant insert, update, delete on public.vip to anon, authenticated;
+
+
+-- ---------- categorías de la tienda VIP (las pestañas) ----------
+create table if not exists public.vip_categorias (
+  id     text primary key check (id ~ '^[a-z0-9-]{1,40}$'),
+  nombre text not null check (char_length(nombre) between 1 and 40),
+  icono  text not null default 'estrella',
+  orden  int  not null default 0
+);
+alter table public.vip_categorias enable row level security;
+
+drop policy if exists "vip_categorias: leer todos" on public.vip_categorias;
+create policy "vip_categorias: leer todos" on public.vip_categorias
+  for select using (true);
+
+drop policy if exists "vip_categorias: admin escribe" on public.vip_categorias;
+create policy "vip_categorias: admin escribe" on public.vip_categorias
+  for all using (public.tiene_rol('admin', 'staff')) with check (public.tiene_rol('admin', 'staff'));
+
+grant select on public.vip_categorias to anon, authenticated;
+grant insert, update, delete on public.vip_categorias to anon, authenticated;
+
+insert into public.vip_categorias (id, nombre, icono, orden) values
+  ('carros', 'Carros', 'carro', 1),
+  ('motos', 'Motos', 'moto', 2),
+  ('casas', 'Casas', 'casa', 3),
+  ('otros', 'Otros', 'estrella', 4)
+on conflict (id) do nothing;
 
 
 -- ---------- permisos de las tablas (las políticas de arriba deciden qué filas) ----------
