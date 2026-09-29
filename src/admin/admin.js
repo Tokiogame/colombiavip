@@ -6,6 +6,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL, SUPABASE_KEY } from "../config.js";
 import { sb } from "../lib/supabase.js";
+import { CATEGORIAS, imagenVip } from "../data/vip.js";
 import "../styles/style.css";
 import "../styles/admin.css";
 
@@ -128,6 +129,7 @@ async function entrar(s) {
   await cargarFacciones();
   cargarSolicitudes();
   if (puede("admin", "staff")) cargarVideos();
+  if (puede("admin", "staff")) cargarVip();
   if (puede("admin")) cargarStaff();
 }
 
@@ -470,6 +472,151 @@ formFac.addEventListener("submit", async e => {
     cargarFacciones();
   } catch (err) {
     avisar(formFac, "No se pudo guardar: " + err.message, "mal");
+  } finally {
+    boton.disabled = false;
+  }
+});
+
+
+/* ============================================
+   TIENDA VIP
+   ============================================ */
+const listaVip = $("#lista-vip");
+const dlgVip = $("#dlg-vip");
+const formVip = $("#form-vip");
+const fVipCat = $("#f-vip-cat");
+const previewVip = $("#vip-preview");
+let articulos = [];
+let vipActual = null;
+
+const pesos = n => "$" + Number(n).toLocaleString("es-CO");
+const nombreCat = id => CATEGORIAS.find(c => c.id === id)?.nombre || id;
+
+const opcionesCat = CATEGORIAS.map(c => `<option value="${esc(c.id)}">${esc(c.nombre)}</option>`).join("");
+fVipCat.insertAdjacentHTML("beforeend", opcionesCat);
+formVip.elements.categoria.innerHTML = opcionesCat;
+
+async function cargarVip() {
+  try {
+    articulos = await q(db.from("vip").select("*").order("categoria").order("orden"));
+  } catch (err) {
+    listaVip.innerHTML = err.code === "42P01" || err.code === "PGRST205"
+      ? '<p class="vacia">Falta crear la tabla «vip»: ejecuta supabase/schema.sql en el SQL Editor.</p>'
+      : '<p class="vacia">No se pudieron cargar los artículos.</p>';
+    return fallo(err);
+  }
+  pintarVip();
+}
+
+function pintarVip() {
+  const visibles = fVipCat.value ? articulos.filter(a => a.categoria === fVipCat.value) : articulos;
+  if (!visibles.length) {
+    listaVip.innerHTML = '<p class="vacia">No hay artículos aquí. Agrega el primero.</p>';
+    return;
+  }
+  listaVip.innerHTML = visibles.map(a => `
+    <div class="item">
+      <span class="miniatura" ${a.imagen ? `style="background-image:url('${esc(imagenVip(a.imagen))}')"` : ""}></span>
+      <span class="item-txt">
+        <b>${esc(a.nombre)}</b>
+        <small>${esc(nombreCat(a.categoria))} · ${pesos(a.precio)}</small>
+      </span>
+      ${a.destacado ? '<span class="chip pendiente">Más vendido</span>' : ""}
+      ${a.agotado ? '<span class="chip cerrada">Agotado</span>' : ""}
+      <span class="item-acc">
+        <button type="button" data-acc="agotado" data-id="${a.id}">${a.agotado ? "Hay stock" : "Agotar"}</button>
+        <button type="button" data-acc="editar" data-id="${a.id}">Editar</button>
+        <button type="button" data-acc="borrar" data-id="${a.id}" class="peligro">Eliminar</button>
+      </span>
+    </div>`).join("");
+}
+
+fVipCat.addEventListener("change", pintarVip);
+
+listaVip.addEventListener("click", async e => {
+  const b = e.target.closest("[data-acc]");
+  if (!b) return;
+  const a = articulos.find(x => x.id === b.dataset.id);
+
+  try {
+    if (b.dataset.acc === "editar") return abrirVip(a);
+
+    if (b.dataset.acc === "agotado") {
+      await q(db.from("vip").update({ agotado: !a.agotado }).eq("id", a.id));
+      mostrarToast(`${a.nombre}: ${a.agotado ? "disponible otra vez" : "agotado"}.`);
+    }
+
+    if (b.dataset.acc === "borrar") {
+      if (!confirm(`¿Eliminar «${a.nombre}» de la tienda?`)) return;
+      await q(db.from("vip").delete().eq("id", a.id));
+      mostrarToast(`${a.nombre} eliminado.`);
+    }
+    cargarVip();
+  } catch (err) { fallo(err); }
+});
+
+function pintarPreviewVip() {
+  const url = imagenVip(formVip.elements.imagen.value.trim());
+  previewVip.innerHTML = url ? `<img src="${esc(url)}" alt="" onerror="this.outerHTML='<p>No se pudo cargar esa imagen.</p>'">` : "";
+}
+formVip.elements.imagen.addEventListener("input", pintarPreviewVip);
+
+function abrirVip(a) {
+  vipActual = a || null;
+  formVip.reset();
+  avisar(formVip, "");
+  $("#vip-titulo").textContent = a ? a.nombre : "Agregar artículo";
+
+  const el = formVip.elements;
+  const cat = a?.categoria || fVipCat.value || CATEGORIAS[0].id;
+  el.nombre.value = a?.nombre || "";
+  el.categoria.value = cat;
+  el.precio.value = a?.precio ?? "";
+  el.orden.value = a ? a.orden : articulos.filter(x => x.categoria === cat).length + 1;
+  el.descripcion.value = a?.descripcion || "";
+  el.incluye.value = (a?.incluye || []).join("\n");
+  el.imagen.value = a?.imagen || "";
+  el.destacado.checked = !!a?.destacado;
+  el.agotado.checked = !!a?.agotado;
+
+  pintarPreviewVip();
+  dlgVip.showModal();
+  dlgVip.scrollTop = 0;
+}
+
+$("#nuevo-vip").addEventListener("click", () => abrirVip());
+
+formVip.addEventListener("submit", async e => {
+  e.preventDefault();
+  const el = formVip.elements;
+  const precio = Math.round(+el.precio.value);
+
+  if (!el.nombre.value.trim()) return avisar(formVip, "Ponle un nombre.", "mal");
+  if (!el.precio.value || !(precio >= 0)) return avisar(formVip, "Pon el precio en pesos, sin puntos.", "mal");
+
+  const datos = {
+    nombre: el.nombre.value.trim(),
+    categoria: el.categoria.value,
+    precio,
+    orden: +el.orden.value || 0,
+    descripcion: el.descripcion.value.trim(),
+    incluye: el.incluye.value.split("\n").map(r => r.trim()).filter(Boolean),
+    imagen: el.imagen.value.trim(),
+    destacado: el.destacado.checked,
+    agotado: el.agotado.checked,
+  };
+
+  const boton = $("button[type=submit]", formVip);
+  boton.disabled = true;
+  avisar(formVip, "Guardando…");
+  try {
+    if (vipActual) await q(db.from("vip").update(datos).eq("id", vipActual.id));
+    else await q(db.from("vip").insert(datos));
+    dlgVip.close();
+    mostrarToast(`${datos.nombre} guardado.`);
+    cargarVip();
+  } catch (err) {
+    avisar(formVip, "No se pudo guardar: " + err.message, "mal");
   } finally {
     boton.disabled = false;
   }

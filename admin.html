@@ -38,6 +38,7 @@
     <nav class="adm-tabs" role="tablist">
       <button role="tab" data-tab="solicitudes" aria-selected="true">Solicitudes <span class="badge" id="badge-pend" hidden></span></button>
       <button role="tab" data-tab="facciones" aria-selected="false" data-roles="admin staff">Facciones</button>
+      <button role="tab" data-tab="vip" aria-selected="false" data-roles="admin staff">Tienda VIP</button>
       <button role="tab" data-tab="videos" aria-selected="false" data-roles="admin staff">Videos</button>
       <button role="tab" data-tab="staff" aria-selected="false" data-roles="admin">Staff</button>
     </nav>
@@ -80,6 +81,20 @@
         <button class="btn btn-mini" id="nueva-fac" type="button">Nueva facción</button>
       </div>
       <div id="lista-fac" class="lista"></div>
+    </section>
+
+    <!-- tienda VIP -->
+    <section id="tab-vip" class="tab" hidden>
+      <div class="adm-cab">
+        <h1>Tienda VIP</h1>
+        <button class="btn btn-mini" id="nuevo-vip" type="button">Agregar artículo</button>
+      </div>
+      <div class="filtros">
+        <select id="f-vip-cat" aria-label="Categoría">
+          <option value="">Todas las categorías</option>
+        </select>
+      </div>
+      <div id="lista-vip" class="lista"></div>
     </section>
 
     <!-- videos -->
@@ -195,6 +210,53 @@
   </form>
 </dialog>
 
+<!-- ============ ARTÍCULO VIP ============ -->
+<dialog id="dlg-vip" class="modal">
+  <form id="form-vip" class="formulario" novalidate>
+    <button type="button" class="cerrar" aria-label="Cerrar">×</button>
+    <p class="etiqueta">Tienda VIP</p>
+    <h3 id="vip-titulo">Agregar artículo</h3>
+    <div class="fila">
+      <label>Nombre
+        <input name="nombre" required maxlength="80" placeholder="Toyota Hilux">
+      </label>
+      <label>Categoría
+        <select name="categoria"></select>
+      </label>
+    </div>
+    <div class="fila">
+      <label>Precio en pesos <span class="min">sin puntos: 40000</span>
+        <input name="precio" type="number" min="0" step="1000" required placeholder="40000">
+      </label>
+      <label>Orden
+        <input name="orden" type="number" value="0">
+      </label>
+    </div>
+    <label>Descripción corta
+      <textarea name="descripcion" rows="2" placeholder="La camioneta de toda la vida. Aguanta trocha y carretera."></textarea>
+    </label>
+    <label>Qué incluye <span class="min">uno por línea</span>
+      <textarea name="incluye" rows="3" placeholder="Placa personalizada&#10;Maletero grande"></textarea>
+    </label>
+    <label>Link de la imagen <span class="min">opcional · sin imagen se muestra el ícono</span>
+      <input name="imagen" placeholder="https://i.imgur.com/….png">
+    </label>
+    <div class="vid-preview" id="vip-preview"></div>
+    <label class="check">
+      <input type="checkbox" name="destacado">
+      Marcar como «Más vendido»
+    </label>
+    <label class="check">
+      <input type="checkbox" name="agotado">
+      Agotado (se ve, pero no se puede pedir)
+    </label>
+    <div class="form-pie">
+      <button type="submit" class="btn">Guardar</button>
+      <p class="aviso" role="status"></p>
+    </div>
+  </form>
+</dialog>
+
 <!-- ============ EDITAR VIDEO ============ -->
 <dialog id="dlg-vid" class="modal">
   <form id="form-vid" class="formulario" novalidate>
@@ -230,7 +292,7 @@
     <label id="staff-campo-rol">Rol
       <select name="rol">
         <option value="entrevistador">Entrevistador · ve y responde solicitudes</option>
-        <option value="staff">Staff · solicitudes, facciones y videos</option>
+        <option value="staff">Staff · solicitudes, facciones, tienda VIP y videos</option>
         <option value="admin">Admin · todo, incluido el staff</option>
       </select>
     </label>

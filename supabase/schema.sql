@@ -311,6 +311,35 @@ create policy "solicitudes: admin borra" on public.solicitudes
   for delete using (public.tiene_rol('admin', 'staff'));
 
 
+-- ---------- tienda VIP ----------
+-- categoria: carros, motos, casas u otros (las pestañas están en src/data/vip.js)
+create table if not exists public.vip (
+  id          uuid primary key default gen_random_uuid(),
+  categoria   text not null default 'carros',
+  nombre      text not null check (char_length(nombre) between 1 and 80),
+  precio      int  not null default 0 check (precio >= 0),
+  descripcion text not null default '',
+  incluye     jsonb not null default '[]',
+  imagen      text not null default '',
+  destacado   boolean not null default false,
+  agotado     boolean not null default false,
+  orden       int  not null default 0,
+  creado      timestamptz not null default now()
+);
+alter table public.vip enable row level security;
+
+drop policy if exists "vip: leer todos" on public.vip;
+create policy "vip: leer todos" on public.vip
+  for select using (true);
+
+drop policy if exists "vip: admin escribe" on public.vip;
+create policy "vip: admin escribe" on public.vip
+  for all using (public.tiene_rol('admin', 'staff')) with check (public.tiene_rol('admin', 'staff'));
+
+grant select on public.vip to anon, authenticated;
+grant insert, update, delete on public.vip to anon, authenticated;
+
+
 -- ---------- permisos de las tablas (las políticas de arriba deciden qué filas) ----------
 grant select on public.videos, public.facciones to anon, authenticated;
 grant insert on public.solicitudes to anon, authenticated;

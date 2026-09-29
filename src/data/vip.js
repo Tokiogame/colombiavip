@@ -1,13 +1,15 @@
 /* ============================================
-   TIENDA VIP — edita aquí categorías y artículos
+   TIENDA VIP
    ============================================
-   - precio: número en pesos colombianos, sin puntos (35000 = $35.000)
-   - imagen: opcional. Pon el archivo en public/img/vip/ y escribe solo
-     el nombre (ej. "sultan.webp"). Sin imagen se muestra el ícono.
-   - destacado: true le pone la etiqueta "Más vendido"
-   - agotado: true deja la tarjeta pero sin botón de pedir
-   Los de abajo son EJEMPLOS: cámbialos por lo que venden de verdad.
+   Los artículos se manejan desde el panel (admin.html > Tienda VIP).
+   Aquí quedan las categorías (pestañas) y unos artículos de respaldo
+   que solo se muestran si Supabase no responde.
 */
+
+import { img } from "../lib/supabase.js";
+
+// la imagen puede ser un link (https://…) o un archivo de public/img/vip/
+export const imagenVip = v => (!v ? "" : /^https?:\/\//i.test(v) ? v : img(`vip/${v}`));
 
 // canal o forma de abrir ticket que se le explica al jugador
 export const VIP_TICKET = "abre un ticket en el canal #tienda-vip del Discord";
@@ -19,7 +21,8 @@ export const CATEGORIAS = [
   { id: "otros", nombre: "Otros", icono: "estrella" },
 ];
 
-export const ARTICULOS = [
+// respaldo: solo si Supabase no responde o falta crear la tabla
+export const ARTICULOS_RESPALDO = [
   // ---------- carros ----------
   {
     categoria: "carros",

@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { DISCORD_URL } from "../config.js";
-import { CATEGORIAS, ARTICULOS, VIP_TICKET } from "../data/vip.js";
-import { img } from "../lib/supabase.js";
+import { CATEGORIAS, ARTICULOS_RESPALDO, VIP_TICKET, imagenVip } from "../data/vip.js";
+import { sb } from "../lib/supabase.js";
 import { Aparecer, Cabecera, Tarjeta3D, useToast } from "./ui.jsx";
 
 const ICONOS = {
@@ -40,7 +40,7 @@ function Articulo({ a, icono }) {
     <Tarjeta3D className={`articulo ${a.destacado ? "destacado" : ""}`} inclinacion={5}>
       <div className="articulo-img">
         {a.imagen
-          ? <img src={img(`vip/${a.imagen}`)} alt={a.nombre} loading="lazy" />
+          ? <img src={imagenVip(a.imagen)} alt={a.nombre} loading="lazy" />
           : <span className="articulo-ico"><Icono nombre={icono} /></span>}
         {a.destacado && <span className="articulo-marca">Más vendido</span>}
       </div>
@@ -61,8 +61,17 @@ function Articulo({ a, icono }) {
 
 export default function Vip() {
   const [cat, setCat] = useState(CATEGORIAS[0].id);
+  const [todos, setTodos] = useState(sb ? null : ARTICULOS_RESPALDO);
   const categoria = CATEGORIAS.find(c => c.id === cat);
-  const articulos = ARTICULOS.filter(a => a.categoria === cat);
+  const articulos = todos?.filter(a => a.categoria === cat);
+
+  // los artículos se editan en el panel; si la tabla no existe quedan los de respaldo
+  useEffect(() => {
+    if (!sb) return;
+    sb.from("vip").select("*").order("orden").then(({ data, error }) => {
+      setTodos(error ? ARTICULOS_RESPALDO : data);
+    });
+  }, []);
 
   return (
     <section id="vip" className="bloque">
@@ -89,15 +98,16 @@ export default function Vip() {
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={cat}
+          key={cat + (todos ? "" : "-cargando")}
           className="articulos"
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.25 }}
         >
-          {articulos.length
-            ? articulos.map(a => <Articulo key={a.nombre} a={a} icono={categoria.icono} />)
+          {articulos === undefined ? [0, 1, 2].map(i => <div key={i} className="video-cargando" />)
+            : articulos.length
+            ? articulos.map(a => <Articulo key={a.id ?? a.nombre} a={a} icono={categoria.icono} />)
             : <p className="vip-vacio">Pronto habrá artículos en esta categoría.</p>}
         </motion.div>
       </AnimatePresence>
