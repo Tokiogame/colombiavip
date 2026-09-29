@@ -643,6 +643,32 @@ legend span {
 .aviso.bien { color: var(--verde); }
 .nota { font: 12px var(--f-mono); color: var(--gris); margin-top: 22px; }
 
+/* ---------- whitelist paso a paso ---------- */
+.wl { overflow: hidden; }
+.wl fieldset { margin-bottom: 10px; min-height: 250px; }
+.wl-progreso { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+.wl-progreso span { flex: none; font: 500 12px var(--f-mono); letter-spacing: 1px; text-transform: uppercase; color: var(--oro); }
+.wl-progreso i { flex: 1; height: 4px; border-radius: 99px; background: var(--linea-suave); overflow: hidden; }
+.wl-progreso b { display: block; height: 100%; background: var(--oro-grad); transform-origin: left; }
+.wl-pregunta { display: block; font: 700 clamp(22px, 2.6vw, 28px)/1.2 var(--f-titulo); color: var(--blanco); margin-bottom: 14px; }
+.wl-repaso { color: var(--texto); margin-bottom: 22px; }
+.wl-repaso b { color: var(--oro-claro); }
+
+.wl-lista { text-align: center; padding-block: 56px; }
+.wl-lista-ico {
+  display: grid;
+  place-items: center;
+  width: 64px; height: 64px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  background: rgba(62, 207, 110, .14);
+  color: var(--verde);
+  font-size: 30px;
+}
+.wl-lista h3 { font: 800 32px/1.1 var(--f-titulo); text-transform: uppercase; margin-bottom: 12px; }
+.wl-lista p { color: var(--texto); max-width: 480px; margin: 0 auto 22px; }
+.wl-otra { background: none; border: 0; color: var(--oro-claro); font: 500 14px var(--f-texto); text-decoration: underline; cursor: pointer; }
+
 /* ---------- postulaciones ---------- */
 .facciones {
   display: grid;
