@@ -790,6 +790,25 @@ formVip.addEventListener("submit", async e => {
 
   if (!el.nombre.value.trim()) return avisar(formVip, "Ponle un nombre.", "mal");
 
+  // no dejar dos artículos con el mismo nombre (sin importar mayúsculas, tildes ni espacios).
+  // Se consulta la base en este momento por si otro del staff lo acaba de agregar.
+  const comparable = t => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim();
+  const boton = $("button[type=submit]", formVip);
+  boton.disabled = true;   // desde ya, para que un doble clic no alcance a guardar dos veces
+  avisar(formVip, "Revisando…");
+  let existentes;
+  try {
+    existentes = await q(db.from("vip").select("id, nombre, categoria"));
+  } catch (err) {
+    boton.disabled = false;
+    return avisar(formVip, "No se pudo revisar si el nombre ya existe: " + err.message, "mal");
+  }
+  const repetido = existentes.find(x => x.id !== vipActual?.id && comparable(x.nombre) === comparable(el.nombre.value));
+  if (repetido) {
+    boton.disabled = false;
+    return avisar(formVip, `Ya hay un artículo llamado «${repetido.nombre}» en ${nombreCat(repetido.categoria)}. Usa otro nombre o edita ese.`, "mal");
+  }
+
   const datos = {
     nombre: el.nombre.value.trim(),
     categoria: el.categoria.value,
@@ -801,8 +820,6 @@ formVip.addEventListener("submit", async e => {
     agotado: el.agotado.checked,
   };
 
-  const boton = $("button[type=submit]", formVip);
-  boton.disabled = true;
   avisar(formVip, fotoNueva ? "Subiendo imagen…" : "Guardando…");
   let subida = null;
   try {
