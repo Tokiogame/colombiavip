@@ -1,6 +1,8 @@
 import { DISCORD_URL, CFX_URL, CONNECT } from "../config.js";
 import { img } from "../lib/supabase.js";
-import { Aparecer, Copiar, Magnetico } from "./ui.jsx";
+import { Aparecer, Copiar, Magnetico, useToast } from "./ui.jsx";
+
+const AUTOR_DISCORD = "pope.exc";
 
 // franja animada del servidor (public/img/barra.mp4); lleva al Discord
 function Cinta() {
@@ -32,6 +34,25 @@ export function Cierre() {
   );
 }
 
+// crédito del autor: al tocarlo copia su usuario de Discord
+function Autor() {
+  const toast = useToast();
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(AUTOR_DISCORD);
+      toast(`Discord copiado: ${AUTOR_DISCORD}`);
+    } catch (e) {
+      toast(`Discord: ${AUTOR_DISCORD}`);
+    }
+  }
+  return (
+    <span className="pie-autor">
+      Web hecha por <button type="button" onClick={copiar} title="Copiar su Discord">Pope (Ñato)</button>
+      <small> · Discord: {AUTOR_DISCORD}</small>
+    </span>
+  );
+}
+
 export function Pie() {
   return (
     <footer className="pie">
@@ -54,7 +75,7 @@ export function Pie() {
       </div>
       <p className="pie-legal">
         © {new Date().getFullYear()} <a href="admin.html" className="oculto">Colombia VIP</a> · Servidor de rol en FiveM. GTA V es marca de Rockstar Games.
-        <span className="pie-autor">Web hecha por <b>Pope (Ñato)</b></span>
+        <Autor />
       </p>
     </footer>
   );
