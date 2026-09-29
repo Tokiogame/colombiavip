@@ -5,6 +5,11 @@
 // Invitación del Discord (todos los botones de Discord usan este link)
 export const DISCORD_URL = "https://discord.gg/EKUBfARebA";
 
+// Canal de tickets (donde está el botón del bot). Lo abre el botón «Pedir» de la tienda VIP.
+// Solo funciona para quien ya está en el servidor; a los demás se les muestra DISCORD_URL.
+// (Discord > clic derecho en el canal > Copiar enlace)
+export const TICKET_URL = "https://discord.com/channels/1429219884922962102/1429268638883381278";
+
 // Código del servidor en FiveM (lo que va después de cfx.re/join/)
 export const CFX_CODIGO = "kqm9yk6";
 export const CFX_URL = `https://cfx.re/join/${CFX_CODIGO}`;

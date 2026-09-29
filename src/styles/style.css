@@ -1021,6 +1021,9 @@ legend span {
   border-top: 1px solid var(--linea-suave);
 }
 .articulo-pie .btn { flex: 1; padding: 12px 22px; font-size: 17px; }
+.vip-unirse { margin-top: 26px; font-size: 15px; color: var(--texto); }
+.vip-unirse a { color: var(--oro-claro); font-weight: 600; }
+.vip-unirse + .nota { margin-top: 8px; }
 .vip-vacio { grid-column: 1 / -1; color: var(--gris); padding: 40px 0; text-align: center; }
 
 /* ---------- responsive ---------- */

@@ -11,7 +11,7 @@ import { img } from "../lib/supabase.js";
 export const imagenVip = v => (!v ? "" : /^https?:\/\//i.test(v) ? v : img(`vip/${v}`));
 
 // canal o forma de abrir ticket que se le explica al jugador
-export const VIP_TICKET = "abre un ticket en el canal #tienda-vip del Discord";
+export const VIP_TICKET = "abre un ticket en el canal 🎫 ticket del Discord";
 
 // íconos que se pueden escoger para una categoría (los dibujos están en Vip.jsx)
 export const ICONOS_VIP = {

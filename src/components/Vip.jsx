@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { DISCORD_URL } from "../config.js";
+import { DISCORD_URL, TICKET_URL } from "../config.js";
 import { CATEGORIAS_RESPALDO, ARTICULOS_RESPALDO, VIP_TICKET, imagenVip } from "../data/vip.js";
 import { sb } from "../lib/supabase.js";
 import { Aparecer, Cabecera, Tarjeta3D, useToast } from "./ui.jsx";
@@ -34,11 +34,11 @@ function Articulo({ a, icono }) {
   async function pedir() {
     try {
       await navigator.clipboard.writeText(`Hola, quiero comprar: ${a.nombre}`);
-      toast("Mensaje copiado. Pégalo en tu ticket del Discord.");
+      toast("Mensaje copiado. Abre tu ticket y pégalo ahí.");
     } catch (e) {
       toast(`Pide «${a.nombre}» en tu ticket del Discord.`);
     }
-    open(DISCORD_URL, "_blank", "noopener");
+    open(TICKET_URL, "_blank", "noopener");
   }
 
   return (
@@ -97,7 +97,7 @@ export default function Vip() {
 
       <Aparecer className="vip-pasos" y={14}>
         <span><b>1</b>Escoge lo que quieres y dale a «Pedir»</span>
-        <span><b>2</b>Pega el mensaje en tu ticket del Discord</span>
+        <span><b>2</b>Se abre el canal de tickets: abre uno y pega el mensaje</span>
         <span><b>3</b>El staff te dice el precio y te lo entrega en la ciudad</span>
       </Aparecer>
 
@@ -129,6 +129,7 @@ export default function Vip() {
         </motion.div>
       </AnimatePresence>
 
+      <p className="vip-unirse">¿Todavía no estás en el Discord? <a href={DISCORD_URL} target="_blank" rel="noopener">Únete aquí</a> y luego dale a «Pedir».</p>
       <p className="nota">Pregunta el precio en tu ticket. Las compras no son reembolsables y se entregan una vez confirmado el pago.</p>
     </section>
   );
