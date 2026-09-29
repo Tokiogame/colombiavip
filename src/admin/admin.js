@@ -685,6 +685,13 @@ listaVip.addEventListener("click", async e => {
 const quitarFoto = $("#vip-quitar-foto");
 let fotoNueva = null;      // imagen adjunta que se sube al guardar
 let fotoNuevaUrl = "";     // vista previa local de esa imagen
+let fotoHuella = "";       // huella (SHA-256) del archivo original: con ella se nombra al subirla
+
+// huella del archivo: la misma imagen da siempre la misma, aunque cambie el nombre del archivo
+async function huella(archivo) {
+  const hash = await crypto.subtle.digest("SHA-256", await archivo.arrayBuffer());
+  return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
+}
 
 // en qué parte del bucket "vip" está una foto subida (null si es un link externo)
 function rutaFoto(url) {
@@ -715,6 +722,7 @@ function soltarFotoNueva() {
   if (fotoNuevaUrl) URL.revokeObjectURL(fotoNuevaUrl);
   fotoNueva = null;
   fotoNuevaUrl = "";
+  fotoHuella = "";
   formVip.elements.archivo.value = "";
 }
 
@@ -737,9 +745,10 @@ formVip.elements.archivo.addEventListener("change", async e => {
 
   avisar(formVip, "Preparando imagen…");
   try {
-    const blob = await comprimir(archivo);
+    const [blob, id] = await Promise.all([comprimir(archivo), huella(archivo)]);
     soltarFotoNueva();
     fotoNueva = blob;
+    fotoHuella = id;
     fotoNuevaUrl = URL.createObjectURL(blob);
     formVip.elements.imagen.value = "";
     avisar(formVip, "");
@@ -798,7 +807,7 @@ formVip.addEventListener("submit", async e => {
   avisar(formVip, "Revisando…");
   let existentes;
   try {
-    existentes = await q(db.from("vip").select("id, nombre, categoria"));
+    existentes = await q(db.from("vip").select("id, nombre, categoria, imagen"));
   } catch (err) {
     boton.disabled = false;
     return avisar(formVip, "No se pudo revisar si el nombre ya existe: " + err.message, "mal");
@@ -807,6 +816,16 @@ formVip.addEventListener("submit", async e => {
   if (repetido) {
     boton.disabled = false;
     return avisar(formVip, `Ya hay un artículo llamado «${repetido.nombre}» en ${nombreCat(repetido.categoria)}. Usa otro nombre o edita ese.`, "mal");
+  }
+
+  // tampoco dos artículos con la misma imagen: adjunta (misma huella) o por link (mismo link)
+  const link = el.imagen.value.trim();
+  const mismaFoto = existentes.find(x => x.id !== vipActual?.id && x.imagen && (fotoNueva
+    ? rutaFoto(x.imagen)?.startsWith(fotoHuella + ".")
+    : link && x.imagen === link));
+  if (mismaFoto) {
+    boton.disabled = false;
+    return avisar(formVip, `Esa imagen ya la usa «${mismaFoto.nombre}» en ${nombreCat(mismaFoto.categoria)}. Escoge otra.`, "mal");
   }
 
   const datos = {
@@ -825,9 +844,10 @@ formVip.addEventListener("submit", async e => {
   try {
     if (fotoNueva) {
       const ext = fotoNueva.type === "image/webp" ? "webp" : "png";
-      subida = `${crypto.randomUUID()}.${ext}`;
+      subida = `${fotoHuella}.${ext}`;
       const { error } = await db.storage.from("vip").upload(subida, fotoNueva, {
         contentType: fotoNueva.type,
+        upsert: true,   // si quedó de un intento anterior, se reemplaza
         cacheControl: "31536000",
       });
       if (error) {
@@ -851,7 +871,8 @@ formVip.addEventListener("submit", async e => {
     cargarVip();
   } catch (err) {
     // la foto se alcanzó a subir pero el artículo no se guardó: no dejarla suelta
-    if (subida) db.storage.from("vip").remove([subida]).catch(console.error);
+    // (salvo que sea la misma que ya tenía este artículo)
+    if (subida && rutaFoto(vipActual?.imagen) !== subida) db.storage.from("vip").remove([subida]).catch(console.error);
     avisar(formVip, "No se pudo guardar: " + err.message, "mal");
   } finally {
     boton.disabled = false;
