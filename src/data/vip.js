@@ -39,7 +39,6 @@ export const ARTICULOS_RESPALDO = [
   {
     categoria: "carros",
     nombre: "Toyota Hilux",
-    precio: 40000,
     descripcion: "La camioneta de toda la vida. Aguanta trocha y carretera.",
     incluye: ["Placa personalizada", "Maletero grande"],
     destacado: true,
@@ -47,14 +46,12 @@ export const ARTICULOS_RESPALDO = [
   {
     categoria: "carros",
     nombre: "Mazda 3",
-    precio: 30000,
     descripcion: "Sedán cómodo para moverse por la ciudad con estilo.",
     incluye: ["Placa personalizada"],
   },
   {
     categoria: "carros",
     nombre: "Chevrolet Tahoe",
-    precio: 50000,
     descripcion: "Grande, pesada y con presencia. Para llegar con todo el combo.",
     incluye: ["Placa personalizada", "Vidrios polarizados"],
   },
@@ -63,7 +60,6 @@ export const ARTICULOS_RESPALDO = [
   {
     categoria: "motos",
     nombre: "Yamaha DT 125",
-    precio: 20000,
     descripcion: "La moto de mandados por excelencia.",
     incluye: ["Placa personalizada"],
     destacado: true,
@@ -71,7 +67,6 @@ export const ARTICULOS_RESPALDO = [
   {
     categoria: "motos",
     nombre: "Pulsar NS 200",
-    precio: 25000,
     descripcion: "Rápida y ágil para meterse entre el trancón.",
     incluye: ["Placa personalizada"],
   },
@@ -80,7 +75,6 @@ export const ARTICULOS_RESPALDO = [
   {
     categoria: "casas",
     nombre: "Apartamento en el centro",
-    precio: 45000,
     descripcion: "Apartamento amoblado cerca de todo.",
     incluye: ["Armario", "Almacenamiento"],
   },
@@ -89,7 +83,6 @@ export const ARTICULOS_RESPALDO = [
   {
     categoria: "otros",
     nombre: "Cambio de nombre",
-    precio: 15000,
     descripcion: "Cambia el nombre y apellido de tu personaje.",
     incluye: [],
   },

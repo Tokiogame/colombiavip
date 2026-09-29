@@ -1020,15 +1020,7 @@ legend span {
   padding-top: 16px;
   border-top: 1px solid var(--linea-suave);
 }
-.precio {
-  font: 800 30px/1 var(--f-titulo);
-  background: var(--oro-grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.precio small { font: 500 11px var(--f-mono); color: var(--gris); margin-left: 6px; -webkit-text-fill-color: var(--gris); }
-.articulo-pie .btn { padding: 12px 22px; font-size: 17px; }
+.articulo-pie .btn { flex: 1; padding: 12px 22px; font-size: 17px; }
 .vip-vacio { grid-column: 1 / -1; color: var(--gris); padding: 40px 0; text-align: center; }
 
 /* ---------- responsive ---------- */

@@ -489,7 +489,6 @@ const previewVip = $("#vip-preview");
 let articulos = [];
 let vipActual = null;
 
-const pesos = n => "$" + Number(n).toLocaleString("es-CO");
 const nombreCat = id => categorias.find(c => c.id === id)?.nombre || id;
 
 /* ---------- categorías (pestañas de la tienda) ---------- */
@@ -645,7 +644,7 @@ function pintarVip() {
       <span class="miniatura" ${a.imagen ? `style="background-image:url('${esc(imagenVip(a.imagen))}')"` : ""}></span>
       <span class="item-txt">
         <b>${esc(a.nombre)}</b>
-        <small>${esc(nombreCat(a.categoria))} · ${pesos(a.precio)}</small>
+        <small>${esc(nombreCat(a.categoria))}${a.incluye?.length ? " · " + esc(a.incluye.join(", ")) : ""}</small>
       </span>
       ${a.destacado ? '<span class="chip pendiente">Más vendido</span>' : ""}
       ${a.agotado ? '<span class="chip cerrada">Agotado</span>' : ""}
@@ -770,7 +769,6 @@ function abrirVip(a) {
   const cat = a?.categoria || fVipCat.value || categorias[0].id;
   el.nombre.value = a?.nombre || "";
   el.categoria.value = cat;
-  el.precio.value = a?.precio ?? "";
   el.orden.value = a ? a.orden : articulos.filter(x => x.categoria === cat).length + 1;
   el.descripcion.value = a?.descripcion || "";
   el.incluye.value = (a?.incluye || []).join("\n");
@@ -789,15 +787,12 @@ $("#nuevo-vip").addEventListener("click", () => abrirVip());
 formVip.addEventListener("submit", async e => {
   e.preventDefault();
   const el = formVip.elements;
-  const precio = Math.round(+el.precio.value);
 
   if (!el.nombre.value.trim()) return avisar(formVip, "Ponle un nombre.", "mal");
-  if (!el.precio.value || !(precio >= 0)) return avisar(formVip, "Pon el precio en pesos, sin puntos.", "mal");
 
   const datos = {
     nombre: el.nombre.value.trim(),
     categoria: el.categoria.value,
-    precio,
     orden: +el.orden.value || 0,
     descripcion: el.descripcion.value.trim(),
     incluye: el.incluye.value.split("\n").map(r => r.trim()).filter(Boolean),

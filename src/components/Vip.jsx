@@ -16,8 +16,6 @@ const ICONOS = {
   estrella: <path d="m12 2 2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z" />,
 };
 
-const pesos = n => `$${n.toLocaleString("es-CO")}`;
-
 function Icono({ nombre }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round">
@@ -32,7 +30,7 @@ function Articulo({ a, icono }) {
   // deja el mensaje copiado para pegarlo en el ticket y abre el Discord
   async function pedir() {
     try {
-      await navigator.clipboard.writeText(`Hola, quiero comprar: ${a.nombre} (${pesos(a.precio)})`);
+      await navigator.clipboard.writeText(`Hola, quiero comprar: ${a.nombre}`);
       toast("Mensaje copiado. Pégalo en tu ticket del Discord.");
     } catch (e) {
       toast(`Pide «${a.nombre}» en tu ticket del Discord.`);
@@ -53,7 +51,6 @@ function Articulo({ a, icono }) {
         <p>{a.descripcion}</p>
         {a.incluye?.length > 0 && <ul>{a.incluye.map(x => <li key={x}>{x}</li>)}</ul>}
         <div className="articulo-pie">
-          <b className="precio">{pesos(a.precio)}<small>COP</small></b>
           {a.agotado
             ? <span className="estado cerrada">Agotado</span>
             : <motion.button type="button" className="btn btn-sm" onClick={pedir} whileTap={{ scale: 0.95 }}>Pedir</motion.button>}
@@ -98,7 +95,7 @@ export default function Vip() {
       <Aparecer className="vip-pasos" y={14}>
         <span><b>1</b>Escoge lo que quieres y dale a «Pedir»</span>
         <span><b>2</b>Pega el mensaje en tu ticket del Discord</span>
-        <span><b>3</b>Pagas y el staff te lo entrega en la ciudad</span>
+        <span><b>3</b>El staff te dice el precio y te lo entrega en la ciudad</span>
       </Aparecer>
 
       <div className="vip-tabs" role="tablist">
@@ -129,7 +126,7 @@ export default function Vip() {
         </motion.div>
       </AnimatePresence>
 
-      <p className="nota">Los precios están en pesos colombianos. Las compras no son reembolsables y se entregan una vez confirmado el pago.</p>
+      <p className="nota">Pregunta el precio en tu ticket. Las compras no son reembolsables y se entregan una vez confirmado el pago.</p>
     </section>
   );
 }
