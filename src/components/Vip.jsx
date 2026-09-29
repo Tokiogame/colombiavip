@@ -13,6 +13,9 @@ const ICONOS = {
   avion: <path d="M10.5 3.5a1.5 1.5 0 0 1 3 0V9l7.5 4.5V16l-7.5-2.5V18l2 1.5V21L12 20l-3.5 1v-1.5l2-1.5v-4.5L3 16v-2.5L10.5 9z" />,
   dinero: <><rect x="2.5" y="6" width="19" height="12" rx="2" /><circle cx="12" cy="12" r="2.8" /><path d="M6 9.5v5M18 9.5v5" /></>,
   ropa: <path d="M9 3 4 5.5 2.5 10l3 1.3V21h13v-9.7l3-1.3L20 5.5 15 3a3 3 0 0 1-6 0z" />,
+  exclusivo: <><path d="M6 3h12l4 6-10 12L2 9z" /><path d="M2 9h20M9 3 7.5 9 12 21l4.5-12L15 3" /></>,
+  negocio: <><path d="M3 9.5 4.5 4h15L21 9.5a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0" /><path d="M4.5 12v8h15v-8M10 20v-5h4v5" /></>,
+  mansion: <><path d="M2 21h20M4 21V10l8-6 8 6v11" /><path d="M2 11.5 12 4l10 7.5M8 21v-7M12 21v-7M16 21v-7M6.5 14h11" /><circle cx="12" cy="9" r="1.2" /></>,
   estrella: <path d="m12 2 2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z" />,
 };
 
