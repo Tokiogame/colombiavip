@@ -84,7 +84,12 @@ function ModalPostulacion({ f, onCerrar }) {
   function alEscribir(e) {
     const { name, value, type } = e.target;
     if (!name) return;
-    if (errores[name]) setErrores(({ [name]: _, ...r }) => r);
+    if (errores[name]) {
+      const { [name]: _, ...resto } = errores;
+      setErrores(resto);
+      // si ya no queda nada en rojo, se quita el aviso de "hay campos por corregir"
+      if (!Object.keys(resto).length) setAviso(null);
+    }
     if (type !== "checkbox") setDatos(d => ({ ...d, [name]: value }));
     // al elegir una opción se pasa sola a la siguiente pregunta
     if (type === "radio" && e.type === "change") setTimeout(() => irA(paso + 1), 280);
@@ -100,7 +105,7 @@ function ModalPostulacion({ f, onCerrar }) {
     setEnviando(true);
     setAviso({ texto: "Enviando…" });
 
-    const datos = [
+    const respuestas = [
       { p: "Nombre y Apellido", r: d.nombre },
       { p: "¿De qué país eres?", r: d.pais },
       { p: "Edad", r: d.edad },
@@ -111,12 +116,12 @@ function ModalPostulacion({ f, onCerrar }) {
       `Fecha: ${new Date().toLocaleString("es-CO")}`,
       `Discord: ${d.discord}`,
       "",
-      ...datos.flatMap(x => [x.p, x.r, ""]),
+      ...respuestas.flatMap(x => [x.p, x.r, ""]),
     ].join("\n");
 
     try {
       await entregar(
-        { tipo: "faccion", faccion_id: f.id, faccion_nombre: f.nombre, discord: d.discord.trim(), personaje: d.personaje.trim(), datos },
+        { tipo: "faccion", faccion_id: f.id, faccion_nombre: f.nombre, discord: d.discord.trim(), personaje: d.personaje.trim(), datos: respuestas },
         {
           url,
           rol: f.rol || ROL_STAFF_ID,
