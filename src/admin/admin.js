@@ -194,6 +194,18 @@ let solicitudes = [];
 let totalSol = 0;
 let pedidoSol = 0;   // para descartar respuestas viejas si cambian los filtros mientras carga
 
+// aplica los filtros de arriba (tipo, estado y búsqueda) a una consulta
+function conFiltros(consulta) {
+  if (fEstado.value) consulta = consulta.eq("estado", fEstado.value);
+  if (fTipo.value === "whitelist") consulta = consulta.eq("tipo", "whitelist");
+  else if (fTipo.value) consulta = consulta.eq("faccion_id", fTipo.value);
+
+  // la búsqueda la hace la base de datos, así encuentra también las que no están cargadas
+  const b = fBuscar.value.trim().replace(/[,()*%\\:"'.]/g, " ").trim();
+  if (b) consulta = consulta.or(`discord.ilike.*${b}*,personaje.ilike.*${b}*`);
+  return consulta;
+}
+
 // "mas" agrega la siguiente tanda; si no, arranca de cero con los filtros actuales
 async function cargarSolicitudes(mas = false) {
   const pedido = ++pedidoSol;
@@ -205,13 +217,7 @@ async function cargarSolicitudes(mas = false) {
     .order("creado", { ascending: false })
     .range(desde, desde + POR_PAGINA - 1);
 
-  if (fEstado.value) consulta = consulta.eq("estado", fEstado.value);
-  if (fTipo.value === "whitelist") consulta = consulta.eq("tipo", "whitelist");
-  else if (fTipo.value) consulta = consulta.eq("faccion_id", fTipo.value);
-
-  // la búsqueda la hace la base de datos, así encuentra también las que no están cargadas
-  const b = fBuscar.value.trim().replace(/[,()*%\\:"'.]/g, " ").trim();
-  if (b) consulta = consulta.or(`discord.ilike.*${b}*,personaje.ilike.*${b}*`);
+  consulta = conFiltros(consulta);
 
   try {
     const { data, count, error } = await consulta;
@@ -270,6 +276,27 @@ fBuscar.addEventListener("input", () => {
   esperaBusqueda = setTimeout(() => cargarSolicitudes(), 300);
 });
 $("#recargar-sol").addEventListener("click", () => cargarSolicitudes());
+
+// borra todas las que coinciden con los filtros (sin filtros, todas)
+$("#borrar-sol").addEventListener("click", async () => {
+  const hayFiltros = fTipo.value || fEstado.value || fBuscar.value.trim();
+  let n;
+  try {
+    n = await q(conFiltros(db.from("solicitudes").select("id", { count: "exact", head: true })));
+  } catch (err) { return fallo(err); }
+  if (!n) return mostrarToast("No hay solicitudes para borrar.");
+
+  const cuales = hayFiltros ? `las ${n} solicitudes que coinciden con los filtros` : `TODAS las solicitudes (${n})`;
+  const escrito = prompt(`Vas a borrar ${cuales}.\nNo se puede deshacer. Los mensajes de Discord no se borran.\n\nEscribe BORRAR para confirmar:`);
+  if (escrito?.trim().toUpperCase() !== "BORRAR") return mostrarToast("No se borró nada.");
+
+  try {
+    // Supabase no deja borrar sin filtro: "creado no es nulo" las incluye a todas
+    const borradas = await q(conFiltros(db.from("solicitudes").delete({ count: "exact" }).not("creado", "is", null)));
+    mostrarToast(`${borradas} solicitudes borradas.`);
+  } catch (err) { fallo(err); }
+  cargarSolicitudes();
+});
 
 // detalle
 const dlgSol = $("#dlg-sol");
