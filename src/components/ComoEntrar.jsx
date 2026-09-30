@@ -69,7 +69,7 @@ function Descarga() {
 }
 
 /* ---------- parada 3: examen que se va aprobando ---------- */
-const PASOS_WL = ["Datos fuera del rol", "Historia del personaje", "Preguntas de rol", "Entrevista de voz"];
+const PASOS_WL = ["Unirte al Discord", "Leer la normativa", "Canal de voz de WL", "Entrevista con el staff"];
 
 function Examen() {
   const ref = useRef(null);
@@ -164,7 +164,7 @@ const PARADAS = [
     pin: "3",
     meta: "Parada 03 · Filtro",
     titulo: <>Pasa la <em>whitelist</em></>,
-    texto: <>Examen escrito y entrevista de voz en el Discord. Léete bien la <a href="#normativa">normativa</a>.</>,
+    texto: <>Entrevista de voz con el staff en el Discord. Léete bien la <a href="#normativa">normativa</a>.</>,
     extra: (
       <>
         <Examen />

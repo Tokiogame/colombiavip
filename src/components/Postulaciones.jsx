@@ -41,10 +41,6 @@ function ModalPostulacion({ f, onCerrar }) {
   const [aviso, setAviso] = useState(null);
   const [enviando, setEnviando] = useState(false);
 
-  // Discord y personaje suelen ser los mismos de la whitelist
-  let borrador = {};
-  try { borrador = JSON.parse(localStorage.getItem("wl-borrador") || "{}"); } catch (e) {}
-
   useEffect(() => {
     const esc = e => e.key === "Escape" && onCerrar();
     addEventListener("keydown", esc);
@@ -137,7 +133,7 @@ function ModalPostulacion({ f, onCerrar }) {
           <legend><span>A</span> Tus datos</legend>
           <div className="fila">
             <Campo etiqueta="Usuario de Discord" error={errores.discord}>
-              <input name="discord" required placeholder="usuario" defaultValue={borrador.discord} autoFocus />
+              <input name="discord" required placeholder="usuario" autoFocus />
             </Campo>
             <Campo etiqueta="Edad (OOC)" error={errores.edad}>
               <input name="edad" type="number" min="16" max="99" required />
@@ -145,7 +141,7 @@ function ModalPostulacion({ f, onCerrar }) {
           </div>
           <div className="fila">
             <Campo etiqueta="Nombre del personaje" error={errores.personaje}>
-              <input name="personaje" required placeholder="Ej: Andrés Quintero" defaultValue={borrador.personaje} />
+              <input name="personaje" required placeholder="Ej: Andrés Quintero" />
             </Campo>
             <Campo etiqueta="Horas en la ciudad" error={errores.horas}>
               <input name="horas" type="number" min="0" required />

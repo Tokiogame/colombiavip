@@ -5,8 +5,8 @@ import { Aparecer, Cabecera } from "./ui.jsx";
 
 const PREGUNTAS = [
   ["¿Cómo me conecto al servidor?", <>Abre FiveM, presiona F8 y escribe <code>{CONNECT}</code>. También puedes usar el botón «Conectarse» de arriba.</>],
-  ["¿Cuánto se demora en revisar mi whitelist?", "La escrita se revisa normalmente entre 24 y 72 horas. Si la apruebas, te citamos por el Discord para la whitelist de voz, así que no te salgas del servidor."],
-  ["Me rechazaron la whitelist, ¿puedo volver a intentarlo?", "Sí, a los 3 días. Revisa lo que te dijeron y vuelve a leer la normativa antes de mandarla otra vez."],
+  ["¿Cómo hago la whitelist?", "Es de voz y se hace en el Discord: entra al canal de voz de whitelist y espera a que un staff te atienda. Necesitas micrófono y haberte leído la normativa."],
+  ["Me rechazaron la whitelist, ¿puedo volver a intentarlo?", "Sí, a los 3 días. Revisa lo que te dijeron y vuelve a leer la normativa antes de presentarla otra vez."],
   ["¿El servidor es gratis?", "Sí, entrar es totalmente gratis. La tienda VIP es opcional: sirve para apoyar al servidor y llevarte carros, motos y otras cosas para tu personaje."],
   ["¿Cómo compro algo de la tienda VIP?", "En la página VIP escoge el artículo y dale a «Pedir». Se copia un mensaje que pegas en tu ticket del Discord y el staff te explica cómo pagar."],
   ["¿Necesito tener GTA V original?", "Sí. Necesitas GTA V legal (Steam, Epic o Rockstar) y FiveM instalado."],
