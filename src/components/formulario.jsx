@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 // devuelve qué tiene mal el campo, o "" si está bien
 function problema(c) {
   const v = c.value.trim();
+  if (c.type === "radio") return c.required && !c.form.querySelector(`input[name="${c.name}"]:checked`) ? "Elige una opción." : "";
   if (c.type === "checkbox") return c.required && !c.checked ? "Debes marcar esta casilla." : "";
   if (c.required && !v) return "Este campo es obligatorio.";
   if (c.dataset.min && v.length < +c.dataset.min) {
@@ -77,6 +78,24 @@ export function Texto({ etiqueta, nombre, min = 0, rows = 3, error, valorInicial
       )}
       <MsgError error={error} />
     </label>
+  );
+}
+
+// pregunta de elegir una sola opción (Sí / No, un puesto…)
+export function Opciones({ etiqueta, nombre, opciones, error }) {
+  return (
+    <div className={`opciones ${error ? "error" : ""}`} role="radiogroup" aria-label={etiqueta}>
+      <span className="opciones-titulo">{etiqueta}</span>
+      <div className="opciones-lista">
+        {opciones.map(o => (
+          <label key={o} className="opcion">
+            <input type="radio" name={nombre} value={o} required />
+            <span>{o}</span>
+          </label>
+        ))}
+      </div>
+      <MsgError error={error} />
+    </div>
   );
 }
 

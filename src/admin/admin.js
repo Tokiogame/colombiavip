@@ -379,15 +379,17 @@ listaFac.addEventListener("click", async e => {
   } catch (err) { fallo(err); }
 });
 
-function filaPregunta(p = { texto: "", min: 80 }) {
+function filaPregunta(p = { texto: "", min: 6 }) {
   const div = document.createElement("div");
   div.className = "pregunta";
   div.innerHTML = `
     <textarea rows="2" placeholder="Escribe la pregunta" aria-label="Pregunta"></textarea>
     <input type="number" min="0" aria-label="Mínimo de caracteres" title="Mínimo de caracteres">
-    <button type="button" class="quitar" aria-label="Quitar pregunta">×</button>`;
+    <button type="button" class="quitar" aria-label="Quitar pregunta">×</button>
+    <input class="opciones" placeholder="Opciones separadas por coma (ej: Sí, No). Vacío = respuesta escrita" aria-label="Opciones">`;
   $("textarea", div).value = p.texto;
-  $("input", div).value = p.min;
+  $("input", div).value = p.min ?? 0;
+  $(".opciones", div).value = (p.opciones || []).join(", ");
   $(".quitar", div).addEventListener("click", () => div.remove());
   contPreguntas.append(div);
 }
@@ -416,7 +418,7 @@ function abrirFaccion(f) {
   el.rol.value = f?.rol || "";
 
   contPreguntas.innerHTML = "";
-  (f?.preguntas?.length ? f.preguntas : [{ texto: "", min: 150 }]).forEach(filaPregunta);
+  (f?.preguntas?.length ? f.preguntas : [{ texto: "", min: 6 }]).forEach(filaPregunta);
 
   dlgFac.showModal();
   dlgFac.scrollTop = 0;
@@ -429,7 +431,12 @@ formFac.addEventListener("submit", async e => {
   const el = formFac.elements;
 
   const preguntas = [...$$(".pregunta", contPreguntas)]
-    .map(d => ({ texto: $("textarea", d).value.trim(), min: Math.max(0, +$("input", d).value || 0) }))
+    .map(d => {
+      const texto = $("textarea", d).value.trim();
+      const opciones = $(".opciones", d).value.split(",").map(o => o.trim()).filter(Boolean);
+      // con opciones es de elegir una; sin opciones es de escribir con mínimo de caracteres
+      return opciones.length ? { texto, opciones } : { texto, min: Math.max(0, +$("input", d).value || 0) };
+    })
     .filter(p => p.texto);
 
   if (!el.nombre.value.trim() || !el.descripcion.value.trim())

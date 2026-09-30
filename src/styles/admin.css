@@ -177,6 +177,7 @@ button.item:hover { border-color: var(--linea); background: var(--tarjeta-2); }
 
 .pregunta { display: grid; grid-template-columns: 1fr 90px 38px; gap: 10px; align-items: start; margin-bottom: 12px; }
 .pregunta textarea { min-height: 46px; }
+.pregunta .opciones { grid-column: 1 / -1; margin-top: -4px; }
 .pregunta .quitar {
   height: 46px;
   background: none;

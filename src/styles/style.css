@@ -619,7 +619,7 @@ legend span {
 }
 .fila { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
 
-.formulario input:not([type=checkbox]),
+.formulario input:not([type=checkbox]):not([type=radio]),
 .formulario select,
 .formulario textarea {
   display: block;
@@ -658,6 +658,28 @@ legend span {
   margin-top: 6px;
 }
 .contador.ok { color: var(--verde); }
+
+/* preguntas de elegir una opción */
+.opciones { margin-bottom: 20px; }
+.opciones-titulo { display: block; font-weight: 500; font-size: 14px; color: var(--blanco); margin-bottom: 10px; }
+.opciones-lista { display: flex; flex-wrap: wrap; gap: 8px; }
+.formulario .opcion { position: relative; margin: 0; }
+.opcion input { position: absolute; opacity: 0; pointer-events: none; }
+.opcion span {
+  display: block;
+  padding: 9px 16px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 99px;
+  background: var(--fondo);
+  color: var(--texto);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color .2s, background .2s, color .2s;
+}
+.opcion:hover span { border-color: var(--linea); }
+.opcion input:checked + span { border-color: var(--oro); background: rgba(224, 176, 44, .14); color: var(--oro-claro); }
+.opcion input:focus-visible + span { box-shadow: 0 0 0 3px rgba(224, 176, 44, .25); }
+.opciones.error .opcion span { border-color: var(--error); }
 
 .formulario .check { display: flex; gap: 12px; align-items: center; color: var(--texto); }
 .check input { width: 18px; height: 18px; accent-color: var(--oro); flex: none; }

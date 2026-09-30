@@ -4,7 +4,7 @@ import { FACCIONES_RESPALDO, WEBHOOK_URL, ROL_STAFF_ID } from "../config.js";
 import { sb, colorValido } from "../lib/supabase.js";
 import { entregar, slug } from "../lib/envio.js";
 import { Aparecer, Cabecera, Tarjeta3D } from "./ui.jsx";
-import { Aviso, Campo, Casilla, Texto, resumenErrores, validar } from "./formulario.jsx";
+import { Aviso, Campo, Casilla, Opciones, Texto, resumenErrores, validar } from "./formulario.jsx";
 
 const ICONOS = {
   cruz: <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" />,
@@ -66,8 +66,9 @@ function ModalPostulacion({ f, onCerrar }) {
     setAviso({ texto: "Enviando…" });
 
     const datos = [
-      { p: "Edad OOC", r: d.edad },
-      { p: "Horas en la ciudad", r: d.horas },
+      { p: "Nombre y Apellido", r: d.nombre },
+      { p: "¿De qué país eres?", r: d.pais },
+      { p: "Edad", r: d.edad },
       ...f.preguntas.map((p, i) => ({ p: p.texto, r: d["p" + i] })),
     ];
     const txt = [
@@ -90,7 +91,7 @@ function ModalPostulacion({ f, onCerrar }) {
           campos: [
             { name: "Discord", value: d.discord.slice(0, 100), inline: true },
             { name: "Edad", value: String(d.edad), inline: true },
-            { name: "Horas", value: String(d.horas), inline: true },
+            { name: "País", value: d.pais.slice(0, 100), inline: true },
           ],
           txt,
           archivo: `postulacion-${f.id}-${slug(d.personaje)}.txt`,
@@ -132,27 +133,32 @@ function ModalPostulacion({ f, onCerrar }) {
         <fieldset>
           <legend><span>A</span> Tus datos</legend>
           <div className="fila">
-            <Campo etiqueta="Usuario de Discord" error={errores.discord}>
-              <input name="discord" required placeholder="usuario" autoFocus />
+            <Campo etiqueta="Nombre y Apellido" error={errores.nombre}>
+              <input name="nombre" required maxLength="100" autoFocus />
             </Campo>
-            <Campo etiqueta="Edad (OOC)" error={errores.edad}>
-              <input name="edad" type="number" min="16" max="99" required />
+            <Campo etiqueta="Nombre IC" error={errores.personaje}>
+              <input name="personaje" required maxLength="100" placeholder="Ej: Andrés Quintero" />
             </Campo>
           </div>
+          <Campo etiqueta="Username de Discord + ID" error={errores.discord}>
+            <input name="discord" required maxLength="100" placeholder="usuario · 123456789012345678" />
+          </Campo>
           <div className="fila">
-            <Campo etiqueta="Nombre del personaje" error={errores.personaje}>
-              <input name="personaje" required placeholder="Ej: Andrés Quintero" />
+            <Campo etiqueta="¿De qué país eres?" error={errores.pais}>
+              <input name="pais" required maxLength="60" />
             </Campo>
-            <Campo etiqueta="Horas en la ciudad" error={errores.horas}>
-              <input name="horas" type="number" min="0" required />
+            <Campo etiqueta="Edad" error={errores.edad}>
+              <input name="edad" type="number" min="16" max="99" required />
             </Campo>
           </div>
         </fieldset>
 
         <fieldset>
           <legend><span>B</span> Preguntas de la facción</legend>
-          {f.preguntas.map((p, i) => (
-            <Texto key={i} etiqueta={p.texto} nombre={"p" + i} min={+p.min || 0} rows={4} error={errores["p" + i]} />
+          {f.preguntas.map((p, i) => p.opciones?.length ? (
+            <Opciones key={i} etiqueta={p.texto} nombre={"p" + i} opciones={p.opciones} error={errores["p" + i]} />
+          ) : (
+            <Texto key={i} etiqueta={p.texto} nombre={"p" + i} min={+p.min || 0} rows={3} error={errores["p" + i]} />
           ))}
         </fieldset>
 

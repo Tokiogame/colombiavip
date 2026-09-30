@@ -32,7 +32,7 @@ export const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdX
 export const FACCIONES_RESPALDO = [
   {
     id: "ems",
-    nombre: "EMS Zura",
+    nombre: "EPS Zura",
     sigla: "Servicio médico de emergencias",
     color: "#e5484d",
     icono: "cruz",
@@ -42,9 +42,9 @@ export const FACCIONES_RESPALDO = [
     descripcion: "Atiende heridos, maneja la ambulancia y salva vidas en cada rincón de la ciudad.",
     requisitos: ["Whitelist aprobada", "Mínimo 2 semanas en la ciudad", "Sin sanciones graves recientes"],
     preguntas: [
-      { texto: "¿Por qué quieres pertenecer a EMS Zura?", min: 150 },
-      { texto: "Llegas a un tiroteo con varios heridos y la policía aún no controla la zona. ¿Qué haces?", min: 120 },
-      { texto: "¿Qué harías si un compañero EMS está ayudando a una banda?", min: 80 },
+      { texto: "¿Conoces nuestras normativas generales?", opciones: ["Sí", "No"] },
+      { texto: "¿Has sido EMS antes?", opciones: ["Sí", "No"] },
+      { texto: "¿Eres consciente que al pertenecer a esta facción civil de EPS/EMS no puedes ser delictivo, banda o guerilla?", opciones: ["Sí", "No"] },
     ],
   },
   {
@@ -59,9 +59,9 @@ export const FACCIONES_RESPALDO = [
     descripcion: "Patrulla las calles, responde a los robos y mantiene el orden dentro de la ciudad.",
     requisitos: ["Whitelist aprobada", "Mínimo 2 semanas en la ciudad", "Conocer la normativa de robos"],
     preguntas: [
-      { texto: "¿Por qué quieres entrar a la Policía Nacional?", min: 150 },
-      { texto: "Durante un atraco con rehenes, los atracadores piden un carro. ¿Cómo manejas la negociación?", min: 120 },
-      { texto: "¿Qué es el abuso de poder y cómo lo evitarías con tu personaje?", min: 80 },
+      { texto: "¿Conoces nuestras normativas generales?", opciones: ["Sí", "No"] },
+      { texto: "¿Conoces nuestras normativas legales y de la Policía Nacional de Colombia?", opciones: ["Sí", "No"] },
+      { texto: "¿Has sido policía antes?", opciones: ["Sí", "No"] },
     ],
   },
   {
@@ -76,9 +76,9 @@ export const FACCIONES_RESPALDO = [
     descripcion: "Protege zonas estratégicas, apoya operativos de alto riesgo y responde ante amenazas mayores.",
     requisitos: ["Whitelist aprobada", "Mínimo 2 semanas en la ciudad", "Disponibilidad para entrenamientos"],
     preguntas: [
-      { texto: "¿Por qué quieres entrar al Ejército Nacional?", min: 150 },
-      { texto: "¿Cuál crees que es la diferencia entre el rol del Ejército y el de la Policía?", min: 100 },
-      { texto: "Tu superior te da una orden que va contra la normativa del servidor. ¿Qué haces?", min: 80 },
+      { texto: "¿Conoces nuestras normativas generales?", opciones: ["Sí", "No"] },
+      { texto: "¿Conoces nuestras normativas legales y del Ejército Nacional de Colombia?", opciones: ["Sí", "No"] },
+      { texto: "¿Has sido policía, guardia o de algún rol legal antes?", opciones: ["Sí", "No"] },
     ],
   },
   {
@@ -93,9 +93,11 @@ export const FACCIONES_RESPALDO = [
     descripcion: "Investiga delitos, arma los casos y lleva a los criminales ante la justicia.",
     requisitos: ["Whitelist aprobada", "Mínimo 3 semanas en la ciudad", "Buena redacción y rol de investigación"],
     preguntas: [
-      { texto: "¿Por qué quieres pertenecer a la Fiscalía General?", min: 150 },
-      { texto: "La policía te trae a un sospechoso de homicidio sin pruebas claras. ¿Cómo procedes?", min: 120 },
-      { texto: "¿Cómo manejarías un caso donde está involucrado un miembro de tu propia facción?", min: 80 },
+      { texto: "¿Conoces nuestras normativas generales?", opciones: ["Sí", "No"] },
+      { texto: "¿Has interpretado roles legales o de gobernación antes?", opciones: ["Sí", "No"] },
+      { texto: "¿Eres consciente que al pertenecer a esta facción civil de Fiscalía General de la Nación no puedes ser delictivo, banda o guerrilla?", opciones: ["Sí", "No"] },
+      { texto: "¿A qué puesto te quieres postular?", opciones: ["Ministerio de Defensa", "Fiscal General", "Juez", "Director del CTI", "Investigador del CTI", "Agente del CTI", "Abogado"] },
+      { texto: "¿Porqué quieres pertenecer a la Fiscalía General de la Nación y interpretar ese personaje?", min: 6 },
     ],
   },
 ];

@@ -207,7 +207,7 @@ h1 em {
   inset: 0;
   z-index: 60;
   display: grid;
-  place-items: center;
+  justify-items: center;   /* sin centrar en vertical: si la caja es más alta que la pantalla se cortaría el título */
   padding: 20px 12px;
   overflow-y: auto;
   background: rgba(0, 0, 0, .78);
@@ -216,9 +216,11 @@ h1 em {
 }
 .modal-caja {
   width: min(760px, 100%);
+  margin-block: auto;   /* centrada cuando cabe, desde arriba cuando no */
   border-color: var(--linea);
   overflow: hidden;
 }
+.modal-caja > .etiqueta, .modal-caja > h3 { padding-right: 44px; }   /* que no quede debajo de la × */
 .modal-caja::before {
   content: "";
   position: absolute;
