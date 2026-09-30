@@ -179,6 +179,9 @@ h1 em {
   border-radius: 99px;
 }
 .capitulo-cuerpo { overflow: hidden; }
+@media (max-width: 640px) {
+  .capitulo-cab { font-size: 19px; line-height: 1.1; padding: 18px; gap: 12px; }
+}
 
 /* ---------- formularios ---------- */
 .contador { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
