@@ -36,10 +36,23 @@ function Faccion({ f, onPostular }) {
 }
 
 function ModalPostulacion({ f, onCerrar }) {
-  const form = useRef(null);
+  const caja = useRef(null);
+  const paso$ = useRef(null);
+  const [datos, setDatos] = useState({});
+  const [paso, setPaso] = useState(0);
+  const [dir, setDir] = useState(1);
   const [errores, setErrores] = useState({});
   const [aviso, setAviso] = useState(null);
   const [enviando, setEnviando] = useState(false);
+
+  // primero tus datos, luego una pregunta por pantalla y al final la confirmación
+  const pasos = [
+    { id: "datos", titulo: "Tus datos" },
+    ...f.preguntas.map((p, i) => ({ id: "p" + i, titulo: `Pregunta ${i + 1} de ${f.preguntas.length}`, pregunta: p })),
+    { id: "final", titulo: "Último paso" },
+  ];
+  const actual = pasos[paso];
+  const esFinal = actual.id === "final";
 
   useEffect(() => {
     const esc = e => e.key === "Escape" && onCerrar();
@@ -51,17 +64,39 @@ function ModalPostulacion({ f, onCerrar }) {
     };
   }, [onCerrar]);
 
-  async function enviar(e) {
-    e.preventDefault();
-    const errs = validar(form.current);
+  function irA(n) {
+    setDir(n > paso ? 1 : -1);
+    setPaso(n);
+    setErrores({});
+    setAviso(null);
+    caja.current?.parentElement.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // revisa solo el paso que se ve
+  function pasoValido() {
+    const errs = validar(paso$.current);
     setErrores(errs);
     const n = Object.keys(errs).length;
-    if (n) return setAviso({ texto: resumenErrores(n), tipo: "mal" });
+    if (n) setAviso({ texto: resumenErrores(n), tipo: "mal" });
+    return !n;
+  }
+
+  function alEscribir(e) {
+    const { name, value, type } = e.target;
+    if (!name) return;
+    if (errores[name]) setErrores(({ [name]: _, ...r }) => r);
+    if (type !== "checkbox") setDatos(d => ({ ...d, [name]: value }));
+    // al elegir una opción se pasa sola a la siguiente pregunta
+    if (type === "radio" && e.type === "change") setTimeout(() => irA(paso + 1), 280);
+  }
+
+  async function enviar() {
+    if (!pasoValido()) return;
 
     const url = f.webhook || WEBHOOK_URL;
     if (!sb && !url) return setAviso({ texto: "Falta configurar Supabase o el webhook de Discord en src/config.js.", tipo: "mal" });
 
-    const d = Object.fromEntries(new FormData(form.current));
+    const d = datos;
     setEnviando(true);
     setAviso({ texto: "Enviando…" });
 
@@ -105,22 +140,30 @@ function ModalPostulacion({ f, onCerrar }) {
     }
   }
 
-  const quitarError = e => errores[e.target.name] && setErrores(({ [e.target.name]: _, ...r }) => r);
+  // Enter = siguiente (en el último paso, enviar)
+  function alEnviar(e) {
+    e.preventDefault();
+    if (enviando) return;
+    if (esFinal) enviar();
+    else if (pasoValido()) irA(paso + 1);
+  }
+
+  const p = actual.pregunta;
 
   return (
     <motion.div className="modal-fondo" onClick={e => e.target === e.currentTarget && onCerrar()}
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <motion.form
-        ref={form}
+        ref={caja}
         className="formulario modal-caja"
         style={{ "--c": colorValido(f.color) }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="post-titulo"
         noValidate
-        onSubmit={enviar}
-        onInput={quitarError}
-        onChange={quitarError}
+        onSubmit={alEnviar}
+        onInput={alEscribir}
+        onChange={alEscribir}
         initial={{ opacity: 0, y: 60, scale: 0.94 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 40, scale: 0.96 }}
@@ -130,43 +173,75 @@ function ModalPostulacion({ f, onCerrar }) {
         <p className="etiqueta">{f.sigla}</p>
         <h3 id="post-titulo">Postulación · {f.nombre}</h3>
 
-        <fieldset>
-          <legend><span>A</span> Tus datos</legend>
-          <div className="fila">
-            <Campo etiqueta="Nombre y Apellido" error={errores.nombre}>
-              <input name="nombre" required maxLength="100" autoFocus />
-            </Campo>
-            <Campo etiqueta="Nombre IC" error={errores.personaje}>
-              <input name="personaje" required maxLength="100" placeholder="Ej: Andrés Quintero" />
-            </Campo>
-          </div>
-          <Campo etiqueta="Username de Discord + ID" error={errores.discord}>
-            <input name="discord" required maxLength="100" placeholder="usuario · 123456789012345678" />
-          </Campo>
-          <div className="fila">
-            <Campo etiqueta="¿De qué país eres?" error={errores.pais}>
-              <input name="pais" required maxLength="60" />
-            </Campo>
-            <Campo etiqueta="Edad" error={errores.edad}>
-              <input name="edad" type="number" min="16" max="99" required />
-            </Campo>
-          </div>
-        </fieldset>
+        <div className="pasos-progreso">
+          <span>Paso {paso + 1} de {pasos.length}</span>
+          <i><motion.b animate={{ scaleX: (paso + 1) / pasos.length }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} /></i>
+        </div>
 
-        <fieldset>
-          <legend><span>B</span> Preguntas de la facción</legend>
-          {f.preguntas.map((p, i) => p.opciones?.length ? (
-            <Opciones key={i} etiqueta={p.texto} nombre={"p" + i} opciones={p.opciones} error={errores["p" + i]} />
-          ) : (
-            <Texto key={i} etiqueta={p.texto} nombre={"p" + i} min={+p.min || 0} rows={3} error={errores["p" + i]} />
-          ))}
-        </fieldset>
+        <AnimatePresence mode="wait" custom={dir} initial={false}>
+          <motion.fieldset
+            key={actual.id}
+            ref={paso$}
+            className="paso"
+            custom={dir}
+            variants={{
+              entra: d => ({ opacity: 0, x: d * 40 }),
+              quieto: { opacity: 1, x: 0 },
+              sale: d => ({ opacity: 0, x: d * -40 }),
+            }}
+            initial="entra"
+            animate="quieto"
+            exit="sale"
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <legend><span>{paso + 1}</span> {actual.titulo}</legend>
 
-        <Casilla nombre="acepta" error={errores.acepta}>Tengo la whitelist aprobada y acepto la normativa de la facción.</Casilla>
+            {actual.id === "datos" && (
+              <>
+                <div className="fila">
+                  <Campo etiqueta="Nombre y Apellido" error={errores.nombre}>
+                    <input name="nombre" required maxLength="100" defaultValue={datos.nombre} autoFocus />
+                  </Campo>
+                  <Campo etiqueta="Nombre IC" error={errores.personaje}>
+                    <input name="personaje" required maxLength="100" placeholder="Ej: Andrés Quintero" defaultValue={datos.personaje} />
+                  </Campo>
+                </div>
+                <Campo etiqueta="Username de Discord + ID" error={errores.discord}>
+                  <input name="discord" required maxLength="100" placeholder="usuario · 123456789012345678" defaultValue={datos.discord} />
+                </Campo>
+                <div className="fila">
+                  <Campo etiqueta="¿De qué país eres?" error={errores.pais}>
+                    <input name="pais" required maxLength="60" defaultValue={datos.pais} />
+                  </Campo>
+                  <Campo etiqueta="Edad" error={errores.edad}>
+                    <input name="edad" type="number" min="16" max="99" required defaultValue={datos.edad} />
+                  </Campo>
+                </div>
+              </>
+            )}
+
+            {p && (p.opciones?.length ? (
+              <Opciones etiqueta={p.texto} nombre={actual.id} opciones={p.opciones} valor={datos[actual.id]} error={errores[actual.id]} />
+            ) : (
+              <Texto etiqueta={p.texto} nombre={actual.id} min={+p.min || 0} rows={4}
+                valorInicial={datos[actual.id] || ""} error={errores[actual.id]} autoFocus />
+            ))}
+
+            {esFinal && (
+              <>
+                <p className="paso-repaso">Revisa que tu Discord (<b>{datos.discord}</b>) esté bien escrito: por ahí te van a responder.</p>
+                <Casilla nombre="acepta" error={errores.acepta}>Tengo la whitelist aprobada y acepto la normativa de la facción.</Casilla>
+              </>
+            )}
+          </motion.fieldset>
+        </AnimatePresence>
 
         <div className="form-pie">
-          <motion.button type="submit" className="btn btn-brillo" disabled={enviando} whileTap={{ scale: 0.96 }}>
-            {enviando ? "Enviando…" : "Enviar postulación"}
+          {paso > 0 && (
+            <button type="button" className="btn btn-linea" onClick={() => irA(paso - 1)} disabled={enviando}>← Atrás</button>
+          )}
+          <motion.button type="submit" className={`btn ${esFinal ? "btn-brillo" : ""}`} disabled={enviando} whileTap={{ scale: 0.96 }}>
+            {esFinal ? (enviando ? "Enviando…" : "Enviar postulación") : "Siguiente →"}
           </motion.button>
           <Aviso aviso={aviso} />
         </div>

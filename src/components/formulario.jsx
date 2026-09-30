@@ -82,14 +82,14 @@ export function Texto({ etiqueta, nombre, min = 0, rows = 3, error, valorInicial
 }
 
 // pregunta de elegir una sola opción (Sí / No, un puesto…)
-export function Opciones({ etiqueta, nombre, opciones, error }) {
+export function Opciones({ etiqueta, nombre, opciones, valor, error }) {
   return (
     <div className={`opciones ${error ? "error" : ""}`} role="radiogroup" aria-label={etiqueta}>
       <span className="opciones-titulo">{etiqueta}</span>
       <div className="opciones-lista">
         {opciones.map(o => (
           <label key={o} className="opcion">
-            <input type="radio" name={nombre} value={o} required />
+            <input type="radio" name={nombre} value={o} required defaultChecked={valor === o} />
             <span>{o}</span>
           </label>
         ))}

@@ -659,6 +659,20 @@ legend span {
 }
 .contador.ok { color: var(--verde); }
 
+/* postulación paso a paso */
+.pasos-progreso { display: flex; align-items: center; gap: 16px; margin: 18px 0 26px; }
+.pasos-progreso span { flex: none; font: 500 12px var(--f-mono); letter-spacing: 1px; text-transform: uppercase; color: var(--oro); }
+.pasos-progreso i { flex: 1; height: 4px; border-radius: 99px; background: var(--linea-suave); overflow: hidden; }
+.pasos-progreso b { display: block; height: 100%; background: var(--oro-grad); transform-origin: left; }
+.paso { min-height: 200px; }
+.paso > .opciones .opciones-titulo,
+.paso > label:has(textarea) { font: 700 clamp(20px, 2.4vw, 25px)/1.25 var(--f-titulo); }
+.paso > label:has(textarea) textarea { font: 15px/1.6 var(--f-texto); }
+.paso .contador, .paso .error-msg { font-family: var(--f-mono); font-size: 12px; }
+.paso .opcion span { padding: 12px 22px; font-size: 15px; }
+.paso-repaso { color: var(--texto); margin-bottom: 20px; }
+.paso-repaso b { color: var(--oro-claro); }
+
 /* preguntas de elegir una opción */
 .opciones { margin-bottom: 20px; }
 .opciones-titulo { display: block; font-weight: 500; font-size: 14px; color: var(--blanco); margin-bottom: 10px; }
