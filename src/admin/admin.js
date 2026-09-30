@@ -4,7 +4,7 @@
    ============================================ */
 
 import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_URL, SUPABASE_KEY } from "../config.js";
+import { SUPABASE_URL, SUPABASE_KEY, WEBHOOK_URL } from "../config.js";
 import { sb } from "../lib/supabase.js";
 import { ICONOS_VIP, imagenVip } from "../data/vip.js";
 import "../styles/style.css";
@@ -128,6 +128,7 @@ async function entrar(s) {
 
   await cargarFacciones();
   cargarSolicitudes();
+  abrirDesdeLink();
   if (puede("admin", "staff")) cargarVideos();
   if (puede("admin", "staff")) cargarVip();
   if (puede("admin")) cargarStaff();
@@ -188,42 +189,53 @@ const listaSol = $("#lista-sol");
 const fTipo = $("#f-tipo");
 const fEstado = $("#f-estado");
 const fBuscar = $("#f-buscar");
+const POR_PAGINA = 50;
 let solicitudes = [];
+let totalSol = 0;
+let pedidoSol = 0;   // para descartar respuestas viejas si cambian los filtros mientras carga
 
-async function cargarSolicitudes() {
-  listaSol.innerHTML = '<p class="vacia">Cargando…</p>';
+// "mas" agrega la siguiente tanda; si no, arranca de cero con los filtros actuales
+async function cargarSolicitudes(mas = false) {
+  const pedido = ++pedidoSol;
+  const desde = mas ? solicitudes.length : 0;
+  if (!mas) listaSol.innerHTML = '<p class="vacia">Cargando…</p>';
 
   let consulta = db.from("solicitudes")
-    .select("id, tipo, faccion_id, faccion_nombre, discord, personaje, estado, creado")
+    .select("id, tipo, faccion_id, faccion_nombre, discord, personaje, estado, creado", { count: "exact" })
     .order("creado", { ascending: false })
-    .limit(300);
+    .range(desde, desde + POR_PAGINA - 1);
 
   if (fEstado.value) consulta = consulta.eq("estado", fEstado.value);
   if (fTipo.value === "whitelist") consulta = consulta.eq("tipo", "whitelist");
   else if (fTipo.value) consulta = consulta.eq("faccion_id", fTipo.value);
 
+  // la búsqueda la hace la base de datos, así encuentra también las que no están cargadas
+  const b = fBuscar.value.trim().replace(/[,()*%\\:"'.]/g, " ").trim();
+  if (b) consulta = consulta.or(`discord.ilike.*${b}*,personaje.ilike.*${b}*`);
+
   try {
-    solicitudes = await q(consulta);
+    const { data, count, error } = await consulta;
+    if (error) throw error;
+    if (pedido !== pedidoSol) return;
+    solicitudes = mas ? solicitudes.concat(data) : data;
+    totalSol = count ?? solicitudes.length;
     pintarSolicitudes();
   } catch (err) {
-    listaSol.innerHTML = '<p class="vacia">No se pudieron cargar las solicitudes.</p>';
+    if (pedido !== pedidoSol) return;
+    if (!mas) listaSol.innerHTML = '<p class="vacia">No se pudieron cargar las solicitudes.</p>';
     fallo(err);
   }
-  contarPendientes();
+  if (!mas) contarPendientes();
 }
 
 function pintarSolicitudes() {
-  const b = fBuscar.value.trim().toLowerCase();
-  const visibles = b
-    ? solicitudes.filter(s => (s.discord + " " + s.personaje).toLowerCase().includes(b))
-    : solicitudes;
-
-  if (!visibles.length) {
+  if (!solicitudes.length) {
     listaSol.innerHTML = '<p class="vacia">No hay solicitudes con estos filtros.</p>';
     return;
   }
 
-  listaSol.innerHTML = visibles.map(s => {
+  const faltan = totalSol - solicitudes.length;
+  listaSol.innerHTML = solicitudes.map(s => {
     const fac = facciones.find(f => f.id === s.faccion_id);
     const color = s.tipo === "whitelist" ? "#e0b02c" : colorValido(fac?.color);
     return `
@@ -234,7 +246,11 @@ function pintarSolicitudes() {
       </span>
       <span class="chip ${s.estado}">${s.estado}</span>
     </button>`;
-  }).join("");
+  }).join("") + `
+    <p class="lista-pie">
+      Mostrando ${solicitudes.length} de ${totalSol}
+      ${faltan > 0 ? `<button type="button" class="btn btn-linea btn-mini" id="mas-sol">Cargar ${Math.min(faltan, POR_PAGINA)} más</button>` : ""}
+    </p>`;
 }
 
 async function contarPendientes() {
@@ -246,20 +262,22 @@ async function contarPendientes() {
   } catch (err) { console.error(err); }
 }
 
-fTipo.addEventListener("change", cargarSolicitudes);
-fEstado.addEventListener("change", cargarSolicitudes);
-fBuscar.addEventListener("input", pintarSolicitudes);
-$("#recargar-sol").addEventListener("click", cargarSolicitudes);
+let esperaBusqueda;
+fTipo.addEventListener("change", () => cargarSolicitudes());
+fEstado.addEventListener("change", () => cargarSolicitudes());
+fBuscar.addEventListener("input", () => {
+  clearTimeout(esperaBusqueda);
+  esperaBusqueda = setTimeout(() => cargarSolicitudes(), 300);
+});
+$("#recargar-sol").addEventListener("click", () => cargarSolicitudes());
 
 // detalle
 const dlgSol = $("#dlg-sol");
 let solActual = null;
 
-listaSol.addEventListener("click", async e => {
-  const item = e.target.closest(".item");
-  if (!item) return;
+async function abrirSolicitud(id) {
   try {
-    solActual = await q(db.from("solicitudes").select("*").eq("id", item.dataset.id).single());
+    solActual = await q(db.from("solicitudes").select("*").eq("id", id).single());
   } catch (err) { return fallo(err); }
 
   const s = solActual;
@@ -268,13 +286,30 @@ listaSol.addEventListener("click", async e => {
   $("#sol-meta").innerHTML = `
     <span>Discord: <b>${esc(s.discord)}</b> <button type="button" data-copiar="${esc(s.discord)}">copiar</button></span>
     <span>Enviada: <b>${fecha(s.creado)}</b></span>
-    <span>Estado: <span class="chip ${s.estado}">${s.estado}</span></span>`;
+    <span>Estado: <span class="chip ${s.estado}">${s.estado}</span>${s.revisado_por ? ` por <b>${esc(s.revisado_por)}</b>` : ""}</span>`;
   $("#sol-datos").innerHTML = (s.datos || []).map(d =>
     `<dl><dt>${esc(d.p)}</dt><dd>${esc(d.r)}</dd></dl>`).join("");
   $("#sol-nota").value = s.nota || "";
   dlgSol.showModal();
   dlgSol.scrollTop = 0;
+}
+
+listaSol.addEventListener("click", e => {
+  if (e.target.closest("#mas-sol")) {
+    e.target.closest("#mas-sol").disabled = true;
+    return cargarSolicitudes(true);
+  }
+  const item = e.target.closest(".item");
+  if (item) abrirSolicitud(item.dataset.id);
 });
+
+// el botón "Revisar en el panel" del mensaje de Discord trae ?sol=<id>
+function abrirDesdeLink() {
+  const id = new URLSearchParams(location.search).get("sol");
+  if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return;
+  history.replaceState(null, "", location.pathname);
+  abrirSolicitud(id);
+}
 
 $("#sol-meta").addEventListener("click", async e => {
   const b = e.target.closest("[data-copiar]");
@@ -285,14 +320,78 @@ $("#sol-meta").addEventListener("click", async e => {
   } catch (err) { mostrarToast(b.dataset.copiar); }
 });
 
+/* ---------- mensaje de Discord ----------
+   Al aprobar o rechazar se edita el mensaje que llegó al canal: color, estado
+   y quién lo revisó. La nota del staff NO se publica. */
+const ESTADO_DISCORD = {
+  aprobada: { color: 0x2fa865, icono: "✅", texto: "Aprobada" },
+  rechazada: { color: 0xe5484d, icono: "❌", texto: "Rechazada" },
+  pendiente: { color: null, icono: "⏳", texto: "Pendiente" },
+};
+
+async function actualizarDiscord(s, estado) {
+  if (!/^[0-9]+$/.test(s.discord_msg || "")) return true;   // llegó antes de este cambio o sin webhook
+  const fac = facciones.find(f => f.id === s.faccion_id);
+  const urls = [...new Set([fac?.webhook, WEBHOOK_URL].filter(Boolean))];
+  const e = ESTADO_DISCORD[estado];
+
+  for (const url of urls) {
+    const dir = `${url}/messages/${s.discord_msg}`;
+    const r = await fetch(dir).catch(() => null);
+    if (!r?.ok) continue;   // el mensaje no es de este webhook: prueba el siguiente
+    const m = await r.json();
+    const viejo = m.embeds?.[0] || {};
+
+    const campos = (viejo.fields || []).filter(c => !c.name.startsWith("📌"));
+    if (estado !== "pendiente") {
+      campos.unshift({ name: "📌 Estado", value: `${e.icono} **${e.texto}** por **${sesion.usuario}** · <t:${Math.floor(Date.now() / 1000)}:R>` });
+    }
+    const embed = {
+      author: viejo.author && { name: viejo.author.name, icon_url: viejo.author.icon_url },
+      title: viejo.title,
+      description: viejo.description,
+      color: e.color ?? parseInt(colorValido(fac?.color).slice(1), 16),
+      thumbnail: viejo.thumbnail && { url: viejo.thumbnail.url },
+      fields: campos,
+      footer: { text: estado === "pendiente" ? "Colombia VIP · Apruébala o recházala en el panel de admin" : `Colombia VIP · ${e.texto} en el panel de admin` },
+      timestamp: viejo.timestamp,
+    };
+    const boton = m.components?.[0]?.components?.[0];
+    const cuerpo = {
+      content: estado === "pendiente"
+        ? `📋 Nueva postulación a **${s.faccion_nombre}**`
+        : `${e.icono} Postulación **${e.texto.toLowerCase()}** · **${s.faccion_nombre}** · ${s.personaje}`,
+      embeds: [embed],
+      allowed_mentions: { parse: [] },
+      components: boton?.url
+        ? [{ type: 1, components: [{ type: 2, style: 5, label: "Revisar en el panel", emoji: { name: "🗂️" }, url: boton.url }] }]
+        : [],
+    };
+    const p = await fetch(`${dir}?with_components=true`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cuerpo),
+    }).catch(() => null);
+    return !!p?.ok;
+  }
+  return false;
+}
+
 $$("[data-estado]", dlgSol).forEach(b =>
   b.addEventListener("click", async () => {
+    const estado = b.dataset.estado;
+    const cambios = { estado, nota: $("#sol-nota").value.trim(), revisado_por: estado === "pendiente" ? "" : sesion.usuario };
     try {
-      await q(db.from("solicitudes")
-        .update({ estado: b.dataset.estado, nota: $("#sol-nota").value.trim() })
-        .eq("id", solActual.id));
+      let { error } = await db.from("solicitudes").update(cambios).eq("id", solActual.id);
+      // si todavía no se corrió el SQL de la columna revisado_por
+      if (error?.code === "PGRST204") {
+        delete cambios.revisado_por;
+        ({ error } = await db.from("solicitudes").update(cambios).eq("id", solActual.id));
+      }
+      if (error) throw error;
       dlgSol.close();
-      mostrarToast(`Solicitud de ${solActual.personaje}: ${b.dataset.estado}.`);
+      const enDiscord = await actualizarDiscord(solActual, estado);
+      mostrarToast(`Solicitud de ${solActual.personaje}: ${estado}.` + (enDiscord ? "" : " (No se pudo actualizar el mensaje de Discord.)"));
       cargarSolicitudes();
     } catch (err) { fallo(err); }
   })

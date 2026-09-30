@@ -286,6 +286,8 @@ create table if not exists public.solicitudes (
   datos          jsonb not null default '[]' check (pg_column_size(datos) < 60000),
   estado         text not null default 'pendiente' check (estado in ('pendiente', 'aprobada', 'rechazada')),
   nota           text not null default '',
+  discord_msg    text not null default '' check (discord_msg ~ '^[0-9]{0,25}$'),   -- mensaje en Discord que el panel edita
+  revisado_por   text not null default '',
   creado         timestamptz not null default now()
 );
 create index if not exists solicitudes_creado_idx on public.solicitudes (creado desc);
@@ -295,7 +297,7 @@ alter table public.solicitudes enable row level security;
 drop policy if exists "solicitudes: enviar" on public.solicitudes;
 create policy "solicitudes: enviar" on public.solicitudes
   for insert to anon, authenticated
-  with check (estado = 'pendiente' and nota = '');
+  with check (estado = 'pendiente' and nota = '' and revisado_por = '');
 
 -- solo el staff las ve y las gestiona
 drop policy if exists "solicitudes: admin lee" on public.solicitudes;

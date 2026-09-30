@@ -229,3 +229,6 @@ button.item:hover { border-color: var(--linea); background: var(--tarjeta-2); }
   .fila-3 { grid-template-columns: 1fr 1fr; }
   .pregunta { grid-template-columns: 1fr 70px 38px; }
 }
+
+/* pie de la lista de solicitudes: cuántas se ven y cargar más */
+.lista-pie { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; padding: 16px 0 4px; font: 13px var(--f-mono); color: var(--gris); }

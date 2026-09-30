@@ -21,7 +21,8 @@ export const CONNECT = `connect cfx.re/join/${CFX_CODIGO}`;
 // (Discord > Configuración del canal > Integraciones > Webhooks > Copiar URL)
 export const WEBHOOK_URL = "https://discordapp.com/api/webhooks/1554722113666162740/RL3n4f6VQUlYAcMadI-0F1VKtIhbhc0svP-I8U-p4ZEolaTbpeffIludMIqCHSuUMimq";
 
-// Rol a mencionar cuando llegue una solicitud (déjalo vacío si no quieres ping)
+// Rol a mencionar cuando llegue una solicitud. Si está vacío (y la facción no tiene
+// uno propio en el panel), se menciona a @everyone.
 export const ROL_STAFF_ID = "";
 
 // Supabase > Project Settings > API. Usa la anon / publishable key,

@@ -35,6 +35,56 @@ function Faccion({ f, onPostular }) {
   );
 }
 
+const EMOJI = { cruz: "🚑", escudo: "👮", estrella: "🎖️", balanza: "⚖️" };
+const corta = (t, n) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
+const siNo = r => (r === "Sí" ? "✅ Sí" : r === "No" ? "❌ No" : `🔹 ${r}`);
+
+// Mensaje de Discord: datos arriba y cada pregunta con su respuesta.
+// Límites de Discord: 25 campos, 1024 caracteres por respuesta, 6000 en total.
+function mensajeDiscord(f, d, usuario, id) {
+  const logo = `${location.origin}/img/logo.png`;
+  let total = 0;
+  let recortado = false;
+
+  const preguntas = f.preguntas.slice(0, 21).map((p, i) => {
+    const r = String(d["p" + i] ?? "").trim();
+    let valor = p.opciones?.length ? siNo(r) : ">>> " + r;
+    if (valor.length > 1000 || total + valor.length > 4000) {
+      valor = corta(valor, Math.max(120, Math.min(1000, 4000 - total)));
+      recortado = true;
+    }
+    total += valor.length;
+    return { name: corta(`${i + 1}. ${p.texto}`, 256), value: valor || "—" };
+  });
+  if (f.preguntas.length > 21) recortado = true;
+
+  return {
+    recortado,
+    embed: {
+      author: { name: "Nueva postulación", icon_url: logo },
+      title: corta(`${EMOJI[f.icono] || "📋"} ${f.nombre}`, 256),
+      color: parseInt(colorValido(f.color).slice(1), 16),
+      thumbnail: { url: logo },
+      description: [
+        `### 👤 ${corta(d.personaje.trim(), 100)}`,
+        `**Nombre real:** ${corta(d.nombre.trim(), 100)}`,
+        // <@ID> sale como mención: el staff le da clic y abre el perfil
+        `**Discord:** <@${id}>`,
+        `**Usuario:** \`${usuario}\` · **ID:** \`${id}\``,
+      ].join("\n"),
+      fields: [
+        { name: "🎂 Edad", value: `${d.edad} años`, inline: true },
+        { name: "🌎 País", value: corta(d.pais.trim(), 100), inline: true },
+        { name: "📅 Enviada", value: `<t:${Math.floor(Date.now() / 1000)}:f>`, inline: true },
+        { name: "\u200b", value: "**━━━━━━━━  PREGUNTAS  ━━━━━━━━**" },
+        ...preguntas,
+      ],
+      footer: { text: recortado ? "Hay respuestas largas: están completas en el archivo adjunto" : "Colombia VIP · Apruébala o recházala en el panel de admin" },
+      timestamp: new Date().toISOString(),
+    },
+  };
+}
+
 function ModalPostulacion({ f, onCerrar }) {
   const caja = useRef(null);
   const paso$ = useRef(null);
@@ -121,23 +171,17 @@ function ModalPostulacion({ f, onCerrar }) {
       ...respuestas.flatMap(x => [x.p, x.r, ""]),
     ].join("\n");
 
+    const mensaje = mensajeDiscord(f, d, usuario, d.discord_id.trim());
+
     try {
       await entregar(
         { tipo: "faccion", faccion_id: f.id, faccion_nombre: f.nombre, discord, personaje: d.personaje.trim(), datos: respuestas },
         {
           url,
           rol: f.rol || ROL_STAFF_ID,
-          aviso: `nueva postulación a ${f.nombre}`,
-          titulo: `${f.nombre} · ${d.personaje}`,
-          color: parseInt(colorValido(f.color).slice(1), 16),
-          campos: [
-            // <@ID> sale como mención: el staff le da clic y abre el perfil
-            { name: "Discord", value: `<@${d.discord_id.trim()}>
-${usuario}`.slice(0, 200), inline: true },
-            { name: "Edad", value: String(d.edad), inline: true },
-            { name: "País", value: d.pais.slice(0, 100), inline: true },
-          ],
-          txt,
+          aviso: `📋 Nueva postulación a **${f.nombre}**`,
+          embed: mensaje.embed,
+          txt: mensaje.recortado ? txt : null,
           archivo: `postulacion-${f.id}-${slug(d.personaje)}.txt`,
         },
       );
