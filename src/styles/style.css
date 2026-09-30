@@ -670,6 +670,18 @@ legend span {
 .paso > label:has(textarea) textarea { font: 15px/1.6 var(--f-texto); }
 .paso .contador, .paso .error-msg { font-family: var(--f-mono); font-size: 12px; }
 .paso .opcion span { padding: 12px 22px; font-size: 15px; }
+.nota-discord {
+  margin: -6px 0 22px;
+  padding: 12px 14px;
+  border: 1px solid rgba(88, 101, 242, .35);
+  border-radius: 8px;
+  background: rgba(88, 101, 242, .08);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--texto);
+}
+.nota-discord b { color: var(--blanco); }
+.nota-discord span { display: block; margin-top: 6px; color: var(--gris); }
 .paso-repaso { color: var(--texto); margin-bottom: 20px; }
 .paso-repaso b { color: var(--oro-claro); }
 

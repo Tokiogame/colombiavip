@@ -15,9 +15,11 @@ export const CFX_CODIGO = "kqm9yk6";
 export const CFX_URL = `https://cfx.re/join/${CFX_CODIGO}`;
 export const CONNECT = `connect cfx.re/join/${CFX_CODIGO}`;
 
-// Webhook del canal de Discord donde llegan las whitelist (opcional si usas el panel)
+// Webhook del canal de Discord donde llegan las postulaciones de las facciones
+// (servidor aparte del de la comunidad). Cada facción puede tener el suyo en el panel;
+// si lo deja vacío, usa este.
 // (Discord > Configuración del canal > Integraciones > Webhooks > Copiar URL)
-export const WEBHOOK_URL = "";
+export const WEBHOOK_URL = "https://discordapp.com/api/webhooks/1554722113666162740/RL3n4f6VQUlYAcMadI-0F1VKtIhbhc0svP-I8U-p4ZEolaTbpeffIludMIqCHSuUMimq";
 
 // Rol a mencionar cuando llegue una solicitud (déjalo vacío si no quieres ping)
 export const ROL_STAFF_ID = "";

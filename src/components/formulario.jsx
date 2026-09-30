@@ -7,6 +7,7 @@ function problema(c) {
   if (c.type === "radio") return c.required && !c.form.querySelector(`input[name="${c.name}"]:checked`) ? "Elige una opción." : "";
   if (c.type === "checkbox") return c.required && !c.checked ? "Debes marcar esta casilla." : "";
   if (c.required && !v) return "Este campo es obligatorio.";
+  if (v && c.pattern && !new RegExp(`^(?:${c.pattern})$`).test(v)) return c.dataset.formato || "El formato no es válido.";
   if (c.dataset.min && v.length < +c.dataset.min) {
     const faltan = +c.dataset.min - v.length;
     return `Respuesta muy corta: te faltan ${faltan} caracteres (mínimo ${c.dataset.min}).`;

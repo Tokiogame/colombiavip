@@ -102,6 +102,8 @@ function ModalPostulacion({ f, onCerrar }) {
     if (!sb && !url) return setAviso({ texto: "Falta configurar Supabase o el webhook de Discord en src/config.js.", tipo: "mal" });
 
     const d = datos;
+    const usuario = d.discord_usuario.trim().replace(/^@/, "");
+    const discord = `${usuario} (${d.discord_id.trim()})`;
     setEnviando(true);
     setAviso({ texto: "Enviando…" });
 
@@ -114,14 +116,14 @@ function ModalPostulacion({ f, onCerrar }) {
     const txt = [
       `POSTULACIÓN ${f.nombre.toUpperCase()} — ${d.personaje}`,
       `Fecha: ${new Date().toLocaleString("es-CO")}`,
-      `Discord: ${d.discord}`,
+      `Discord: ${discord}`,
       "",
       ...respuestas.flatMap(x => [x.p, x.r, ""]),
     ].join("\n");
 
     try {
       await entregar(
-        { tipo: "faccion", faccion_id: f.id, faccion_nombre: f.nombre, discord: d.discord.trim(), personaje: d.personaje.trim(), datos: respuestas },
+        { tipo: "faccion", faccion_id: f.id, faccion_nombre: f.nombre, discord, personaje: d.personaje.trim(), datos: respuestas },
         {
           url,
           rol: f.rol || ROL_STAFF_ID,
@@ -129,7 +131,9 @@ function ModalPostulacion({ f, onCerrar }) {
           titulo: `${f.nombre} · ${d.personaje}`,
           color: parseInt(colorValido(f.color).slice(1), 16),
           campos: [
-            { name: "Discord", value: d.discord.slice(0, 100), inline: true },
+            // <@ID> sale como mención: el staff le da clic y abre el perfil
+            { name: "Discord", value: `<@${d.discord_id.trim()}>
+${usuario}`.slice(0, 200), inline: true },
             { name: "Edad", value: String(d.edad), inline: true },
             { name: "País", value: d.pais.slice(0, 100), inline: true },
           ],
@@ -211,9 +215,20 @@ function ModalPostulacion({ f, onCerrar }) {
                     <input name="personaje" required maxLength="100" placeholder="Ej: Andrés Quintero" defaultValue={datos.personaje} />
                   </Campo>
                 </div>
-                <Campo etiqueta="Username de Discord + ID" error={errores.discord}>
-                  <input name="discord" required maxLength="100" placeholder="usuario · 123456789012345678" defaultValue={datos.discord} />
-                </Campo>
+                <div className="fila">
+                  <Campo etiqueta="Usuario de Discord" error={errores.discord_usuario}>
+                    <input name="discord_usuario" required maxLength="40" placeholder="Ej: pope.ecx" defaultValue={datos.discord_usuario}
+                      pattern="@?[A-Za-z0-9_.]{2,32}" data-formato="Escribe tu usuario tal cual sale en Discord (letras, números, punto o guion bajo)." />
+                  </Campo>
+                  <Campo etiqueta="ID de Discord" error={errores.discord_id}>
+                    <input name="discord_id" required inputMode="numeric" maxLength="20" placeholder="Ej: 555552228525285123" defaultValue={datos.discord_id}
+                      pattern="[0-9]{17,20}" data-formato="El ID de Discord son solo números (entre 17 y 20)." />
+                  </Campo>
+                </div>
+                <p className="nota-discord">
+                  <b>Tienen que ser tu usuario y tu ID reales:</b> por ahí te contacta el staff. Si son falsos, la postulación se rechaza.
+                  <span>¿Cómo saco mi ID? En Discord: Ajustes › Avanzado › activa <i>Modo desarrollador</i>. Luego clic derecho (o mantén presionado) sobre tu perfil › <i>Copiar ID de usuario</i>.</span>
+                </p>
                 <div className="fila">
                   <Campo etiqueta="¿De qué país eres?" error={errores.pais}>
                     <input name="pais" required maxLength="60" defaultValue={datos.pais} />
@@ -234,7 +249,7 @@ function ModalPostulacion({ f, onCerrar }) {
 
             {esFinal && (
               <>
-                <p className="paso-repaso">Revisa que tu Discord (<b>{datos.discord}</b>) esté bien escrito: por ahí te van a responder.</p>
+                <p className="paso-repaso">Revisa que tu Discord (<b>{datos.discord_usuario} · {datos.discord_id}</b>) esté bien escrito: por ahí te van a responder.</p>
                 <Casilla nombre="acepta" error={errores.acepta}>Tengo la whitelist aprobada y acepto la normativa de la facción.</Casilla>
               </>
             )}
