@@ -618,6 +618,7 @@ const listaVip = $("#lista-vip");
 const dlgVip = $("#dlg-vip");
 const formVip = $("#form-vip");
 const fVipCat = $("#f-vip-cat");
+const fVipBuscar = $("#f-vip-buscar");
 const previewVip = $("#vip-preview");
 let articulos = [];
 let vipActual = null;
@@ -767,9 +768,16 @@ async function cargarVip() {
 }
 
 function pintarVip() {
-  const visibles = fVipCat.value ? articulos.filter(a => a.categoria === fVipCat.value) : articulos;
+  // sin tildes ni mayúsculas: "camion" encuentra "Camión"
+  const normal = t => String(t ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const busca = normal(fVipBuscar.value.trim());
+  const visibles = articulos.filter(a =>
+    (!fVipCat.value || a.categoria === fVipCat.value) &&
+    (!busca || normal([a.nombre, nombreCat(a.categoria), ...(a.incluye || [])].join(" ")).includes(busca)));
   if (!visibles.length) {
-    listaVip.innerHTML = '<p class="vacia">No hay artículos aquí. Agrega el primero.</p>';
+    listaVip.innerHTML = busca
+      ? `<p class="vacia">Ningún artículo coincide con «${esc(fVipBuscar.value.trim())}».</p>`
+      : '<p class="vacia">No hay artículos aquí. Agrega el primero.</p>';
     return;
   }
   listaVip.innerHTML = visibles.map(a => `
@@ -790,6 +798,7 @@ function pintarVip() {
 }
 
 fVipCat.addEventListener("change", pintarVip);
+fVipBuscar.addEventListener("input", pintarVip);
 
 listaVip.addEventListener("click", async e => {
   const b = e.target.closest("[data-acc]");
