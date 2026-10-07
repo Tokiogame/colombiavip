@@ -2,6 +2,9 @@
    CONFIGURACIÓN — la usan la web y el panel
    ============================================ */
 
+// Dirección pública de la web (canonical, sitemap y vista previa al compartir)
+export const SITE_URL = "https://www.colombiaviprp.com/";
+
 // Invitación del Discord (todos los botones de Discord usan este link)
 export const DISCORD_URL = "https://discord.gg/EKUBfARebA";
 

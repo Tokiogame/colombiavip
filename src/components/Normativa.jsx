@@ -53,47 +53,51 @@ function bloques(normas) {
   return salida;
 }
 
-function Capitulo({ c, numerada, origen, abierto, alternar, q }) {
+// el texto de cada capítulo siempre está en el HTML para que Google lo lea; cerrado solo se colapsa
+function Capitulo({ c, numerada, origen, abierto, alternar, q, id }) {
   const normas = c.normas.filter(n => coincide(n, q));
-  if (q && !normas.length) return null;
   const visible = q ? true : abierto;
   const qr = q.length > 1 ? q : "";
   const Lista = numerada ? "ol" : "ul";
   let n = 0;   // para escalonar la entrada sin que tarde demasiado en capítulos largos
+  const entrada = () => ({
+    initial: false,
+    animate: visible ? { opacity: 1, x: 0 } : { opacity: 0, x: -12 },
+    transition: { delay: visible ? 0.04 * Math.min(n++, 12) : 0 },
+  });
 
   return (
     <motion.div layout className={`capitulo ${visible ? "abierto" : ""}`}>
-      <button type="button" className="capitulo-cab" aria-expanded={visible} onClick={alternar}>
-        <span>{origen ?? c.cap}</span> {c.titulo}
-        {q && <small className="coincidencias">{normas.length}</small>}
-      </button>
-      <AnimatePresence initial={false}>
-        {visible && (
-          <motion.div
-            className="capitulo-cuerpo"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div className="capitulo-texto">
-              {bloques(normas).map((b, i) => b.lista ? (
-                <Lista key={i} className={numerada ? "" : "vinetas"}>
-                  {b.items.map((t, j) => (
-                    <motion.li key={j} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.04 * Math.min(n++, 12) }}>
-                      <Norma texto={t} q={qr} />
-                    </motion.li>
-                  ))}
-                </Lista>
-              ) : (
-                <motion.p key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.04 * Math.min(n++, 12) }}>
-                  <Norma texto={b.p} q={qr} />
-                </motion.p>
+      <h3 className="capitulo-titulo">
+        <button type="button" className="capitulo-cab" aria-expanded={visible} aria-controls={id} onClick={alternar}>
+          <span>{origen ?? c.cap}</span> {c.titulo}
+          {q && <small className="coincidencias">{normas.length}</small>}
+        </button>
+      </h3>
+      <motion.div
+        id={id}
+        className="capitulo-cuerpo"
+        inert={!visible}
+        initial={false}
+        animate={visible ? { height: "auto", opacity: 1 } : { height: 0, opacity: 0 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="capitulo-texto">
+          {bloques(normas).map((b, i) => b.lista ? (
+            <Lista key={i} className={numerada ? "" : "vinetas"}>
+              {b.items.map((t, j) => (
+                <motion.li key={j} {...entrada()}>
+                  <Norma texto={t} q={qr} />
+                </motion.li>
               ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </Lista>
+          ) : (
+            <motion.p key={i} {...entrada()}>
+              <Norma texto={b.p} q={qr} />
+            </motion.p>
+          ))}
+        </div>
+      </motion.div>
     </motion.div>
   );
 }
@@ -116,8 +120,10 @@ export default function Normativa() {
     setAbierto(clave(norm, norm.capitulos[0]));
   }
 
-  // buscando se muestra lo que coincide en todas; si no, solo la pestaña elegida
-  const lista = (q ? NORMATIVAS : [activa]).flatMap(norm => norm.capitulos.map(c => ({ norm, c })));
+  // todas las normativas van en el HTML; buscando se muestra lo que coincide en todas,
+  // si no, solo la pestaña elegida (las demás quedan ocultas)
+  const lista = NORMATIVAS.flatMap(norm => norm.capitulos.map(c => ({ norm, c })));
+  const seVe = ({ norm, c }) => (q ? c.normas.some(n => coincide(n, q)) : norm.id === activa.id);
 
   return (
     <section id="normativa" className="bloque">
@@ -158,9 +164,10 @@ export default function Normativa() {
       </Aparecer>
 
       <div className="normas">
-        {lista.map(({ norm, c }, i) => (q && !c.normas.some(n => coincide(n, q))) ? null : (
-          <Aparecer key={clave(norm, c)} delay={Math.min(i, 8) * 0.06} y={20}>
+        {lista.map(({ norm, c }, i) => (
+          <Aparecer key={clave(norm, c)} delay={Math.min(i, 8) * 0.06} y={20} hidden={!seVe({ norm, c })}>
             <Capitulo
+              id={`norma-${clave(norm, c)}`}
               c={c}
               numerada={norm.numerada}
               origen={q ? norm.nombre : null}

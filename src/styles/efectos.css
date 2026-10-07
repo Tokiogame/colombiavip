@@ -133,6 +133,7 @@ h1 em {
 
 /* ---------- normativa ---------- */
 .capitulo.abierto { border-color: var(--linea); }
+.capitulo-titulo { margin: 0; font: inherit; }
 .capitulo-cab {
   width: 100%;
   background: none;
@@ -238,6 +239,7 @@ h1 em {
   transition: border-color .2s;
 }
 .faq-item.abierta { border-color: var(--linea); }
+.faq-preg { margin: 0; font: inherit; text-transform: none; letter-spacing: normal; }
 .faq-item button {
   width: 100%;
   display: flex;

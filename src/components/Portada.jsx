@@ -6,29 +6,34 @@ import { Copiar, Magnetico } from "./ui.jsx";
 
 const suave = [0.22, 1, 0.36, 1];
 
-// "Aquí se rolea" entra letra por letra
+// "Aquí se rolea" entra letra por letra. Las letras sueltas se ocultan a lectores y
+// buscadores; la frase completa va en un span .sr
 function Letras({ texto, delay = 0 }) {
-  return texto.split("").map((l, i) => (
+  return [<span key="sr" className="sr">{texto}</span>, ...texto.split("").map((l, i) => (
     <motion.span
       key={i}
       className="letra"
+      aria-hidden="true"
       initial={{ opacity: 0, y: "0.6em", rotateX: -90 }}
       animate={{ opacity: 1, y: 0, rotateX: 0 }}
       transition={{ duration: 0.6, delay: delay + i * 0.035, ease: suave }}
     >
       {l === " " ? " " : l}
     </motion.span>
-  ));
+  ))];
 }
+
+// pseudoaleatorio fijo: el HTML prerenderizado y el navegador sacan las mismas chispas
+const azar = n => { const x = Math.sin(n * 9301 + 49297) * 233280; return x - Math.floor(x); };
 
 // chispas doradas que suben en el fondo
 function Chispas({ cantidad = 28 }) {
-  const chispas = useMemo(() => Array.from({ length: cantidad }, () => ({
-    left: Math.random() * 100,
-    tam: 2 + Math.random() * 3,
-    dur: 7 + Math.random() * 9,
-    delay: -Math.random() * 16,
-    deriva: (Math.random() - 0.5) * 80,
+  const chispas = useMemo(() => Array.from({ length: cantidad }, (_, i) => ({
+    left: azar(i * 5) * 100,
+    tam: 2 + azar(i * 5 + 1) * 3,
+    dur: 7 + azar(i * 5 + 2) * 9,
+    delay: -azar(i * 5 + 3) * 16,
+    deriva: (azar(i * 5 + 4) - 0.5) * 80,
   })), [cantidad]);
 
   return (
@@ -106,7 +111,7 @@ export default function Portada() {
       {/* Video de fondo: public/img/fondo.mp4 (720p) y fondo-movil.mp4 (para celular), sin audio */}
       <div className="portada-fondo" aria-hidden="true">
         {/* si el video no carga, queda la imagen del poster */}
-        <video className={`fondo-video ${videoListo ? "listo" : ""}`} autoPlay muted loop playsInline preload="auto"
+        <video className={`fondo-video ${videoListo ? "listo" : ""}`} autoPlay muted loop playsInline preload="metadata"
           poster={img("fondo.jpg")} onCanPlay={() => setVideoListo(true)}>
           <source src={img("fondo-movil.mp4")} type="video/mp4" media="(max-width: 700px)" />
           <source src={img("fondo.mp4")} type="video/mp4" />
@@ -119,19 +124,20 @@ export default function Portada() {
         <motion.img
           className="portada-logo"
           src={img("logo.webp")}
-          alt="Colombia VIP"
+          alt="Colombia VIP RP, servidor FiveM colombiano"
           width="900"
           height="493"
+          fetchPriority="high"
           style={{ y: yLogo }}
-          initial={{ opacity: 0, scale: 0.7, filter: "blur(20px)" }}
-          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+          initial={{ scale: 0.85 }}
+          animate={{ scale: 1 }}
           transition={{ duration: 1.1, ease: suave }}
         />
 
         <motion.div style={{ y: yTexto }} className="portada-texto">
           <motion.p className="etiqueta" initial={{ opacity: 0, letterSpacing: "10px" }} animate={{ opacity: 1, letterSpacing: "3px" }}
             transition={{ duration: 1, delay: 0.5, ease: suave }}>
-            <span className="bandera" aria-hidden="true"></span>Servidor de rol serio · FiveM
+            <span className="bandera" aria-hidden="true"></span>FiveM colombiano · Rol serio
           </motion.p>
 
           <h1>

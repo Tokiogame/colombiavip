@@ -1,11 +1,16 @@
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./styles/style.css";
 import "./styles/efectos.css";
 
-createRoot(document.getElementById("root")).render(
+const raiz = document.getElementById("root");
+const app = (
   <StrictMode>
     <App />
-  </StrictMode>,
+  </StrictMode>
 );
+
+// en producción el HTML ya viene prerenderizado: React lo retoma en vez de pintarlo de cero
+if (raiz.hasChildNodes()) hydrateRoot(raiz, app);
+else createRoot(raiz).render(app);
