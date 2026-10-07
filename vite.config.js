@@ -2,9 +2,9 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 
-// base "./" para que la carpeta dist funcione en cualquier hosting o subcarpeta
+// base "/": la web tiene páginas en subcarpetas (/novedades/…) y sus archivos se piden desde la raíz
 export default defineConfig({
-  base: "./",
+  base: "/",
   plugins: [react()],
   server: { port: 5174 },
   build: {

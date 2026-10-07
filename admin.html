@@ -39,6 +39,7 @@
       <button role="tab" data-tab="solicitudes" aria-selected="true">Solicitudes <span class="badge" id="badge-pend" hidden></span></button>
       <button role="tab" data-tab="facciones" aria-selected="false" data-roles="admin staff">Facciones</button>
       <button role="tab" data-tab="vip" aria-selected="false" data-roles="admin staff">Tienda VIP</button>
+      <button role="tab" data-tab="novedades" aria-selected="false" data-roles="admin staff">Novedades</button>
       <button role="tab" data-tab="videos" aria-selected="false" data-roles="admin staff">Videos</button>
       <button role="tab" data-tab="staff" aria-selected="false" data-roles="admin">Staff</button>
     </nav>
@@ -112,6 +113,15 @@
     </section>
 
     <!-- videos -->
+    <section id="tab-novedades" class="tab" hidden>
+      <div class="adm-cab">
+        <h1>Novedades</h1>
+        <button class="btn btn-mini" id="nuevo-nov" type="button">Escribir novedad</button>
+      </div>
+      <p class="adm-nota">Cada novedad publicada tiene su propia página en la web (<code>/novedades/…</code>), sale en la portada y en el menú. Después de guardar, la web se vuelve a publicar sola: tarda 1 o 2 minutos en verse.</p>
+      <div id="lista-nov" class="lista"></div>
+    </section>
+
     <section id="tab-videos" class="tab" hidden>
       <div class="adm-cab">
         <h1>Guías en video</h1>
@@ -347,6 +357,63 @@
     </label>
     <label>Descripción corta
       <input name="descripcion" placeholder="Desde cero, con el F8 y el connect.">
+    </label>
+    <div class="form-pie">
+      <button type="submit" class="btn">Guardar</button>
+      <p class="aviso" role="status"></p>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============ NOVEDAD ============ -->
+<dialog id="dlg-nov" class="modal">
+  <form id="form-nov" class="formulario" novalidate>
+    <button type="button" class="cerrar" aria-label="Cerrar">×</button>
+    <p class="etiqueta">Novedad</p>
+    <h3 id="nov-titulo">Escribir novedad</h3>
+    <label>Título <span class="min">claro y con palabras que la gente buscaría</span>
+      <input name="titulo" required maxlength="120" placeholder="Actualización 2.4: llegan los taxis y el casino">
+    </label>
+    <label>Dirección de la página
+      <span class="nov-slug"><span>colombiaviprp.com/novedades/</span><input name="slug" required maxlength="80" autocapitalize="off" spellcheck="false" placeholder="actualizacion-2-4-taxis-y-casino"></span>
+    </label>
+    <p class="adm-nota nov-slug-nota" hidden>Ya está publicada: si cambias la dirección, los enlaces viejos dejan de funcionar.</p>
+    <div class="fila">
+      <label>Tipo
+        <select name="tipo"></select>
+      </label>
+      <label>Fecha
+        <input name="fecha" type="date" required>
+      </label>
+    </div>
+    <label>Resumen <span class="min">1 o 2 frases · sale en la tarjeta, en Google y en Discord · <b id="nov-cuenta">0</b>/220</span>
+      <textarea name="resumen" rows="2" maxlength="220" placeholder="Nuevo trabajo de taxista, el casino abre sus puertas y arreglamos los bugs de la grúa."></textarea>
+    </label>
+    <label>Texto completo
+      <textarea name="contenido" rows="12" placeholder="Llegó una de las actualizaciones más grandes del año.&#10;&#10;## Nuevo trabajo: taxista&#10;- Recoge clientes por toda la ciudad&#10;- Paga por **kilómetro recorrido**"></textarea>
+    </label>
+    <p class="adm-nota">Formato: deja una línea en blanco entre párrafos · <code>## Subtítulo</code> · <code>- viñeta</code> · <code>**negrita**</code> · <code>[texto](https://link)</code></p>
+    <fieldset class="vip-foto">
+      <legend>Imagen <span class="min">opcional · horizontal (16:9) · sale en la página y al compartir el link</span></legend>
+      <div class="vid-preview" id="nov-preview"></div>
+      <div class="vip-foto-acc">
+        <label class="btn btn-linea btn-mini">
+          Adjuntar imagen
+          <input name="archivo" type="file" accept="image/png, image/jpeg, image/webp" hidden>
+        </label>
+        <button type="button" class="btn-texto" id="nov-quitar-foto" hidden>Quitar imagen</button>
+      </div>
+      <label>…o pega un link
+        <input name="imagen" placeholder="https://i.imgur.com/….jpg">
+      </label>
+    </fieldset>
+    <label class="check">
+      <input type="checkbox" name="publicado">
+      Publicada (sin marcar queda como borrador: solo la ve el staff)
+    </label>
+    <label class="check" id="nov-anunciar">
+      <input type="checkbox" name="anunciar" checked>
+      Anunciarla en el Discord al publicarla
     </label>
     <div class="form-pie">
       <button type="submit" class="btn">Guardar</button>

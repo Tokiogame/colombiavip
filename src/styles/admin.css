@@ -249,3 +249,12 @@ button.item:hover { border-color: var(--linea); background: var(--tarjeta-2); }
 .ico-preview { display: grid; place-items: center; width: 96px; height: 96px; margin: 0 0 14px; border-radius: 12px; background: var(--fondo); color: var(--oro); }
 .ico-preview:empty { display: none; }
 .ico-preview .icono-propio { width: 56px; height: 56px; }
+
+/* ---------- novedades ---------- */
+.nov-slug { display: flex; align-items: stretch; margin-top: 6px; }
+.nov-slug > span { display: flex; align-items: center; padding: 0 10px; border: 1px solid var(--linea-suave); border-right: 0; border-radius: 8px 0 0 8px; background: var(--tarjeta-2); color: var(--gris); font: 13px var(--f-mono); white-space: nowrap; }
+.nov-slug input { margin-top: 0 !important; border-radius: 0 8px 8px 0 !important; font-family: var(--f-mono); min-width: 0; }
+.nov-slug-nota { color: var(--oro); margin-top: -10px; }
+.chip.borrador { background: rgba(255, 255, 255, .06); color: var(--gris); }
+.chip.publicada { background: rgba(62, 207, 110, .12); color: var(--verde); }
+@media (max-width: 640px) { .nov-slug > span { display: none; } .nov-slug input { border-radius: 8px !important; } }

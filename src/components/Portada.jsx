@@ -3,6 +3,7 @@ import { motion, animate, useMotionValue, useScroll, useSpring, useTransform } f
 import { DISCORD_URL, CFX_CODIGO, CONNECT } from "../config.js";
 import { img } from "../lib/supabase.js";
 import { Copiar, Magnetico } from "./ui.jsx";
+import { AvisoNovedad } from "./Novedades.jsx";
 
 const suave = [0.22, 1, 0.36, 1];
 
@@ -84,7 +85,7 @@ function EstadoServidor() {
   );
 }
 
-export default function Portada() {
+export default function Portada({ ultima }) {
   const ref = useRef(null);
   const [videoListo, setVideoListo] = useState(false);
 
@@ -161,6 +162,8 @@ export default function Portada() {
             <EstadoServidor />
             <Copiar texto={CONNECT} />
           </motion.div>
+
+          <AvisoNovedad n={ultima} />
         </motion.div>
       </motion.div>
 

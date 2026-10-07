@@ -1,13 +1,21 @@
 import { StrictMode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
-import App from "./App.jsx";
+import App, { leerRuta } from "./App.jsx";
 import "./styles/style.css";
 import "./styles/efectos.css";
+import "./styles/novedades.css";
 
 const raiz = document.getElementById("root");
+
+// el prerender deja en la página la ruta que pintó y los datos que usó (novedades)
+let pre = null;
+try { pre = JSON.parse(document.getElementById("datos-pagina")?.textContent || "null"); } catch (e) {}
+
+const ruta = leerRuta(location.pathname);
+const mismaPagina = pre && pre.ruta.pagina === ruta.pagina && pre.ruta.slug === ruta.slug;
 const app = (
   <StrictMode>
-    <App />
+    <App ruta={ruta} datos={mismaPagina ? pre.datos : {}} />
   </StrictMode>
 );
 
@@ -31,5 +39,10 @@ document.addEventListener("click", e => {
 });
 
 // en producción el HTML ya viene prerenderizado: React lo retoma en vez de pintarlo de cero
-if (raiz.hasChildNodes()) hydrateRoot(raiz, app);
-else createRoot(raiz).render(app);
+// (una novedad recién publicada todavía no tiene su HTML: Vercel sirve el de /novedades
+// y aquí se pinta de cero la página que toca)
+if (raiz.hasChildNodes() && mismaPagina) hydrateRoot(raiz, app);
+else {
+  raiz.replaceChildren();
+  createRoot(raiz).render(app);
+}

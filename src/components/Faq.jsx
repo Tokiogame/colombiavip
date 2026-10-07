@@ -11,7 +11,7 @@ export default function Faq() {
 
   return (
     <section id="faq" className="bloque bloque-alt">
-      <Cabecera num="07" titulo="Preguntas frecuentes" />
+      <Cabecera num="08" titulo="Preguntas frecuentes" />
 
       <div className="faq">
         {PREGUNTAS.map(([pregunta, respuesta], i) => (

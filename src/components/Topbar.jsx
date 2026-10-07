@@ -3,21 +3,32 @@ import { motion, useScroll, useSpring } from "motion/react";
 import { DISCORD_URL, CFX_URL } from "../config.js";
 import { Magnetico } from "./ui.jsx";
 import LogoAnimado from "./LogoAnimado.jsx";
+import { esReciente } from "../lib/novedades.js";
 
+// la whitelist sigue en la página (botón de la portada y sección 03), pero en el menú
+// su lugar lo toma Novedades para no amontonar la barra
 const ENLACES = [
   ["entrar", "Cómo entrar"],
   ["normativa", "Normativa"],
-  ["whitelist", "Whitelist"],
   ["postulaciones", "Postulaciones"],
   ["vip", "VIP"],
+  ["novedades", "Novedades"],
   ["guias", "Guías"],
   ["faq", "Preguntas"],
 ];
 
-export default function Topbar() {
+export default function Topbar({ pagina = "inicio", ultima }) {
+  const inicio = pagina === "inicio";
+  const enNovedades = pagina === "novedades" || pagina === "novedad";
   const [solida, setSolida] = useState(false);
   const [abierta, setAbierta] = useState(false);
-  const [activa, setActiva] = useState("");
+  const [activa, setActiva] = useState(enNovedades ? "novedades" : "");
+  // punto de "nuevo" si lo último se publicó hace menos de 7 días (se calcula ya en el navegador)
+  const [hayNueva, setHayNueva] = useState(false);
+  useEffect(() => setHayNueva(!!ultima && esReciente(ultima.fecha)), [ultima]);
+
+  // Novedades es su propia página; las demás son secciones del inicio
+  const destino = id => (id === "novedades" ? "/novedades" : inicio ? `#${id}` : `/#${id}`);
 
   // barra de progreso de lectura
   const { scrollYProgress } = useScroll();
@@ -32,12 +43,13 @@ export default function Topbar() {
 
   // resalta en el menú la sección visible
   useEffect(() => {
+    if (!inicio) return;
     const obs = new IntersectionObserver(entradas => {
       entradas.forEach(e => e.isIntersecting && setActiva(e.target.id));
     }, { rootMargin: "-45% 0px -50% 0px" });
     document.querySelectorAll("main > section[id]").forEach(s => obs.observe(s));
     return () => obs.disconnect();
-  }, []);
+  }, [inicio]);
 
   return (
     <motion.header
@@ -48,12 +60,14 @@ export default function Topbar() {
     >
       <motion.div className="progreso" style={{ scaleX: progreso }} aria-hidden="true" />
       <div className="top-in">
-        <a href="#inicio" className="marca" aria-label="Inicio"><LogoAnimado mini className="marca-logo" width="200" height="112" /></a>
+        <a href={inicio ? "#inicio" : "/"} className="marca" aria-label="Inicio"><LogoAnimado mini className="marca-logo" width="200" height="112" /></a>
 
         <nav className={`nav ${abierta ? "abierta" : ""}`}>
           {ENLACES.map(([id, texto]) => (
-            <a key={id} href={`#${id}`} className={`${activa === id ? "activo" : ""} ${id === "vip" ? "nav-vip" : ""}`} onClick={() => setAbierta(false)}>
+            <a key={id} href={destino(id)} className={`${activa === id ? "activo" : ""} ${id === "vip" ? "nav-vip" : ""}`} onClick={() => setAbierta(false)}
+              aria-current={id === "novedades" && enNovedades ? "page" : undefined}>
               {texto}
+              {id === "novedades" && hayNueva && <span className="nav-nuevo" title="Hay una novedad reciente" />}
               {activa === id && <motion.i className="nav-marca" layoutId="nav-marca" />}
             </a>
           ))}

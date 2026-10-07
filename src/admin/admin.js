@@ -8,6 +8,7 @@ import { SUPABASE_URL, SUPABASE_KEY, WEBHOOK_URL } from "../config.js";
 import { sb } from "../lib/supabase.js";
 import { imagenVip } from "../data/vip.js";
 import { ICONOS, iconoHtml } from "../data/iconos.js";
+import { TIPOS, tipoDe, crearSlug, fechaTexto, rutaNovedad } from "../lib/novedades.js";
 import "../styles/style.css";
 import "../styles/admin.css";
 
@@ -130,6 +131,7 @@ async function entrar(s) {
   await cargarFacciones();
   cargarSolicitudes();
   abrirDesdeLink();
+  if (puede("admin", "staff")) cargarNovedades();
   if (puede("admin", "staff")) cargarVideos();
   if (puede("admin", "staff")) cargarVip();
   if (puede("admin", "staff")) cargarIconos();
@@ -1209,6 +1211,249 @@ formIco.addEventListener("submit", async e => {
     // la imagen se subió pero el ícono no se guardó: no dejarla suelta
     if (subida) db.storage.from("vip").remove([subida]).catch(console.error);
     avisar(formIco, "No se pudo guardar: " + err.message, "mal");
+  } finally {
+    boton.disabled = false;
+  }
+});
+
+
+/* ============================================
+   NOVEDADES
+   ============================================ */
+const listaNov = $("#lista-nov");
+const dlgNov = $("#dlg-nov");
+const formNov = $("#form-nov");
+const previewNov = $("#nov-preview");
+const quitarFotoNov = $("#nov-quitar-foto");
+let novedades = [];
+let novActual = null;
+let slugTocado = false;    // si el staff escribió la dirección a mano, el título ya no la cambia
+let novFoto = null;        // imagen adjunta que se sube al guardar
+let novFotoUrl = "";
+let novFotoHuella = "";
+
+formNov.elements.tipo.innerHTML = Object.entries(TIPOS).map(([id, t]) => `<option value="${id}">${t.nombre}</option>`).join("");
+
+// fecha de hoy en Colombia (AAAA-MM-DD) y la de una novedad
+const hoyCo = () => new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);
+const diaCo = iso => new Date(Date.parse(iso) - 5 * 3600e3).toISOString().slice(0, 10);
+
+async function cargarNovedades() {
+  try {
+    novedades = await q(db.from("novedades").select("*").order("fecha", { ascending: false }));
+  } catch (err) {
+    listaNov.innerHTML = err.code === "PGRST205" || /novedades/.test(err.message)
+      ? '<p class="vacia">Falta crear la tabla: ejecuta <code>supabase/novedades-2026-10.sql</code> en el SQL Editor de Supabase.</p>'
+      : '<p class="vacia">No se pudieron cargar las novedades.</p>';
+    return console.error(err);
+  }
+
+  if (!novedades.length) {
+    listaNov.innerHTML = '<p class="vacia">Aún no hay novedades. En la web no se muestra la sección hasta que publiques la primera.</p>';
+    return;
+  }
+  listaNov.innerHTML = novedades.map((n, i) => `
+    <div class="item">
+      <span class="miniatura" style="${n.imagen ? `background-image:url('${esc(n.imagen)}')` : ""}"></span>
+      <span class="item-txt">
+        <b>${esc(n.titulo)}</b>
+        <small>${tipoDe(n.tipo).nombre} · ${fechaTexto(n.fecha)}${n.anunciada ? " · anunciada en Discord" : ""}</small>
+      </span>
+      <span class="chip ${n.publicado ? "publicada" : "borrador"}">${n.publicado ? "Publicada" : "Borrador"}</span>
+      <span class="item-acc">
+        ${n.publicado ? `<button type="button" data-acc="ver" data-i="${i}">Ver</button>` : ""}
+        <button type="button" data-acc="editar" data-i="${i}">Editar</button>
+        <button type="button" data-acc="borrar" data-i="${i}" class="peligro">Eliminar</button>
+      </span>
+    </div>`).join("");
+}
+
+// le pide a la web que se vuelva a publicar (y que anuncie en Discord si toca).
+// Lo hace api/novedades.js en Vercel, que guarda los enlaces secretos.
+async function avisarWeb(id, anunciar) {
+  try {
+    const r = await fetch("/api/novedades", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-staff-token": sesion.token },
+      body: JSON.stringify({ id, anunciar }),
+    });
+    if (!r.ok) throw new Error(r.status);
+    const res = await r.json();
+    const partes = [];
+    if (res.reconstruyendo === true) partes.push("La web se actualiza en 1–2 minutos.");
+    else if (res.reconstruyendo === "sin-config") partes.push("Falta VERCEL_DEPLOY_HOOK en Vercel: la página propia sale en el próximo deploy.");
+    else partes.push("No se pudo pedir el deploy a Vercel.");
+    if (res.discord === "enviado") partes.push("Anunciada en Discord.");
+    if (res.discord === "sin-config") partes.push("Falta DISCORD_NOVEDADES_WEBHOOK en Vercel para anunciarla.");
+    if (res.discord === "error") partes.push("No se pudo anunciar en Discord.");
+    return partes.join(" ");
+  } catch (err) {
+    // en local (npm run dev) no existe /api
+    console.error(err);
+    return "La web la muestra ya; su página propia sale en el próximo deploy.";
+  }
+}
+
+listaNov.addEventListener("click", async e => {
+  const b = e.target.closest("[data-acc]");
+  if (!b) return;
+  const n = novedades[+b.dataset.i];
+  if (b.dataset.acc === "ver") return open(rutaNovedad(n.slug), "_blank", "noopener");
+  if (b.dataset.acc === "editar") return abrirNovedad(n);
+  if (b.dataset.acc === "borrar") {
+    if (!confirm(`¿Eliminar la novedad «${n.titulo}»? Su página dejará de existir.`)) return;
+    try {
+      await q(db.from("novedades").delete().eq("id", n.id));
+      borrarFoto(n.imagen);
+      cargarNovedades();
+      mostrarToast("Novedad eliminada. " + (n.publicado ? await avisarWeb(null, false) : ""));
+    } catch (err) { fallo(err); }
+  }
+});
+
+/* imagen: adjunta (va al bucket "vip", carpeta novedades/) o por link */
+function soltarFotoNov() {
+  if (novFotoUrl) URL.revokeObjectURL(novFotoUrl);
+  novFoto = null;
+  novFotoUrl = "";
+  novFotoHuella = "";
+  formNov.elements.archivo.value = "";
+}
+
+function pintarPreviewNov() {
+  const url = novFotoUrl || formNov.elements.imagen.value.trim();
+  previewNov.innerHTML = url ? `<img src="${esc(url)}" alt="" onerror="this.outerHTML='<p>No se pudo cargar esa imagen.</p>'">` : "";
+  quitarFotoNov.hidden = !url;
+}
+
+formNov.elements.imagen.addEventListener("input", () => { soltarFotoNov(); pintarPreviewNov(); });
+quitarFotoNov.addEventListener("click", () => { soltarFotoNov(); formNov.elements.imagen.value = ""; pintarPreviewNov(); });
+dlgNov.addEventListener("close", soltarFotoNov);
+
+formNov.elements.archivo.addEventListener("change", async e => {
+  const archivo = e.target.files[0];
+  if (!archivo) return;
+  if (!archivo.type.startsWith("image/")) return avisar(formNov, "Ese archivo no es una imagen.", "mal");
+  if (archivo.size > 15 * 1024 * 1024) return avisar(formNov, "La imagen pesa más de 15 MB.", "mal");
+  avisar(formNov, "Preparando imagen…");
+  try {
+    const [blob, id] = await Promise.all([comprimir(archivo, 1600), huella(archivo)]);
+    soltarFotoNov();
+    novFoto = blob;
+    novFotoHuella = id;
+    novFotoUrl = URL.createObjectURL(blob);
+    formNov.elements.imagen.value = "";
+    avisar(formNov, "");
+    pintarPreviewNov();
+  } catch (err) {
+    console.error(err);
+    avisar(formNov, "No se pudo leer esa imagen. Prueba con otra (PNG o JPG).", "mal");
+  }
+});
+
+/* dirección: sale sola del título hasta que la toquen a mano */
+formNov.elements.titulo.addEventListener("input", () => {
+  if (!slugTocado) formNov.elements.slug.value = crearSlug(formNov.elements.titulo.value);
+});
+formNov.elements.slug.addEventListener("input", () => {
+  slugTocado = true;
+  $(".nov-slug-nota", formNov).hidden = !(novActual?.publicado && formNov.elements.slug.value !== novActual.slug);
+});
+formNov.elements.resumen.addEventListener("input", () => {
+  $("#nov-cuenta").textContent = formNov.elements.resumen.value.length;
+});
+// el aviso de Discord solo tiene sentido si va publicada y no se anunció antes
+const pintarAnunciar = () => {
+  $("#nov-anunciar").hidden = !formNov.elements.publicado.checked || !!novActual?.anunciada;
+};
+formNov.elements.publicado.addEventListener("change", pintarAnunciar);
+
+function abrirNovedad(n) {
+  novActual = n || null;
+  formNov.reset();
+  avisar(formNov, "");
+  $("#nov-titulo").textContent = n ? "Editar novedad" : "Escribir novedad";
+  const el = formNov.elements;
+  el.titulo.value = n?.titulo || "";
+  el.slug.value = n?.slug || "";
+  el.tipo.value = n?.tipo || "actualizacion";
+  el.fecha.value = n ? diaCo(n.fecha) : hoyCo();
+  el.resumen.value = n?.resumen || "";
+  el.contenido.value = n?.contenido || "";
+  el.imagen.value = n?.imagen || "";
+  el.publicado.checked = n ? n.publicado : true;
+  el.anunciar.checked = true;
+  slugTocado = !!n;
+  $("#nov-cuenta").textContent = el.resumen.value.length;
+  $(".nov-slug-nota", formNov).hidden = true;
+  pintarAnunciar();
+  soltarFotoNov();
+  pintarPreviewNov();
+  dlgNov.showModal();
+  dlgNov.scrollTop = 0;
+}
+
+$("#nuevo-nov").addEventListener("click", () => abrirNovedad());
+
+formNov.addEventListener("submit", async e => {
+  e.preventDefault();
+  const el = formNov.elements;
+  const titulo = el.titulo.value.trim();
+  const slug = crearSlug(el.slug.value);
+  if (titulo.length < 3) return avisar(formNov, "Ponle un título.", "mal");
+  if (slug.length < 3) return avisar(formNov, "Escribe la dirección de la página (mínimo 3 letras).", "mal");
+  if (!el.fecha.value) return avisar(formNov, "Escoge la fecha.", "mal");
+  if (el.publicado.checked && !el.resumen.value.trim()) return avisar(formNov, "Escribe un resumen: es lo que se ve en Google y en las tarjetas.", "mal");
+  el.slug.value = slug;
+
+  // la fecha: si no la cambiaron se deja la hora original; si es hoy, la hora de ahora
+  const fecha = novActual && diaCo(novActual.fecha) === el.fecha.value ? novActual.fecha
+    : el.fecha.value === hoyCo() ? new Date().toISOString()
+    : new Date(`${el.fecha.value}T12:00:00-05:00`).toISOString();
+
+  const datos = {
+    titulo,
+    slug,
+    tipo: el.tipo.value,
+    fecha,
+    resumen: el.resumen.value.trim(),
+    contenido: el.contenido.value.trim(),
+    imagen: el.imagen.value.trim(),
+    publicado: el.publicado.checked,
+  };
+  const anunciar = datos.publicado && el.anunciar.checked && !novActual?.anunciada;
+
+  const boton = $("button[type=submit]", formNov);
+  boton.disabled = true;
+  avisar(formNov, novFoto ? "Subiendo imagen…" : "Guardando…");
+  let subida = null;
+  try {
+    if (novFoto) {
+      subida = `novedades/${novFotoHuella}.${novFoto.type === "image/webp" ? "webp" : "png"}`;
+      const { error } = await db.storage.from("vip").upload(subida, novFoto, { contentType: novFoto.type, upsert: true, cacheControl: "31536000" });
+      if (error) { subida = null; throw error; }
+      datos.imagen = db.storage.from("vip").getPublicUrl(subida).data.publicUrl;
+      avisar(formNov, "Guardando…");
+    }
+
+    let id = novActual?.id;
+    if (novActual) await q(db.from("novedades").update(datos).eq("id", id));
+    else [{ id }] = await q(db.from("novedades").insert(datos).select("id"));
+    subida = null;
+    if (novActual?.imagen && novActual.imagen !== datos.imagen) borrarFoto(novActual.imagen);
+
+    // solo hace falta recompilar si cambió algo que se ve en la web
+    const cambiaWeb = datos.publicado || novActual?.publicado;
+    avisar(formNov, cambiaWeb ? "Actualizando la web…" : "Guardando…");
+    const extra = cambiaWeb ? await avisarWeb(id, anunciar) : "Quedó como borrador.";
+    dlgNov.close();
+    mostrarToast(`Novedad guardada. ${extra}`);
+    cargarNovedades();
+  } catch (err) {
+    if (subida && rutaFoto(novActual?.imagen) !== subida) db.storage.from("vip").remove([subida]).catch(console.error);
+    avisar(formNov, err.code === "23505"
+      ? "Ya hay otra novedad con esa dirección. Cámbiala un poco."
+      : "No se pudo guardar: " + err.message, "mal");
   } finally {
     boton.disabled = false;
   }

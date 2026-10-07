@@ -53,7 +53,9 @@ function Autor() {
   );
 }
 
-export function Pie() {
+// fuera del inicio, los enlaces a secciones llevan a /#seccion
+export function Pie({ inicio = true }) {
+  const ir = id => (inicio ? `#${id}` : `/#${id}`);
   return (
     <footer className="pie">
       <div className="pie-in">
@@ -62,19 +64,20 @@ export function Pie() {
           <p>Servidor de rol serio en FiveM. Aquí se rolea a lo colombiano.</p>
         </div>
         <nav className="pie-nav">
-          <a href="#entrar">Cómo entrar</a>
-          <a href="#normativa">Normativa</a>
-          <a href="#whitelist">Whitelist</a>
-          <a href="#postulaciones">Postulaciones</a>
-          <a href="#vip">Tienda VIP</a>
-          <a href="#guias">Guías</a>
-          <a href="#faq">Preguntas</a>
+          <a href={ir("entrar")}>Cómo entrar</a>
+          <a href={ir("normativa")}>Normativa</a>
+          <a href={ir("whitelist")}>Whitelist</a>
+          <a href={ir("postulaciones")}>Postulaciones</a>
+          <a href={ir("vip")}>Tienda VIP</a>
+          <a href="/novedades">Novedades</a>
+          <a href={ir("guias")}>Guías</a>
+          <a href={ir("faq")}>Preguntas</a>
           <a href={DISCORD_URL} target="_blank" rel="noopener">Discord</a>
         </nav>
         <Copiar texto={CONNECT} />
       </div>
       <p className="pie-legal">
-        © {new Date().getFullYear()} <a href="admin.html" className="oculto">Colombia VIP</a> · Servidor de rol en FiveM. GTA V es marca de Rockstar Games.
+        © {new Date().getFullYear()} <a href="/admin.html" className="oculto">Colombia VIP</a> · Servidor de rol en FiveM. GTA V es marca de Rockstar Games.
         <Autor />
       </p>
     </footer>
