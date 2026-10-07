@@ -180,7 +180,7 @@ $$(".adm-tabs button").forEach(b =>
   b.addEventListener("click", () => {
     $$(".adm-tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
     $$(".tab").forEach(t => (t.hidden = t.id !== "tab-" + b.dataset.tab));
-    if (b.dataset.tab === "iconos" && db) pintarIconos();   // para que «Lo usa» esté al día
+    if (b.dataset.tab === "staff" && db) pintarIconos();   // para que «Lo usa» esté al día
   })
 );
 

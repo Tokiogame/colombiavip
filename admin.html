@@ -39,7 +39,6 @@
       <button role="tab" data-tab="solicitudes" aria-selected="true">Solicitudes <span class="badge" id="badge-pend" hidden></span></button>
       <button role="tab" data-tab="facciones" aria-selected="false" data-roles="admin staff">Facciones</button>
       <button role="tab" data-tab="vip" aria-selected="false" data-roles="admin staff">Tienda VIP</button>
-      <button role="tab" data-tab="iconos" aria-selected="false" data-roles="admin staff">Íconos</button>
       <button role="tab" data-tab="videos" aria-selected="false" data-roles="admin staff">Videos</button>
       <button role="tab" data-tab="staff" aria-selected="false" data-roles="admin">Staff</button>
     </nav>
@@ -112,25 +111,6 @@
       <div id="lista-vip" class="lista"></div>
     </section>
 
-    <!-- íconos -->
-    <section id="tab-iconos" class="tab" hidden>
-      <div class="adm-cab">
-        <h1>Íconos</h1>
-        <button class="btn btn-mini" id="nuevo-ico" type="button">Subir ícono</button>
-      </div>
-      <p class="adm-nota">Los íconos que subas aparecen para escoger en Facciones y en las categorías de la Tienda VIP. Usa un PNG con fondo transparente: la web lo pinta del color de la facción o de la tienda.</p>
-
-      <div class="adm-cab adm-sub">
-        <h2>Subidos</h2>
-      </div>
-      <div id="lista-ico" class="lista"></div>
-
-      <div class="adm-cab adm-sub">
-        <h2>Incluidos con la web</h2>
-      </div>
-      <div id="iconos-incluidos" class="iconos-grid"></div>
-    </section>
-
     <!-- videos -->
     <section id="tab-videos" class="tab" hidden>
       <div class="adm-cab">
@@ -140,13 +120,29 @@
       <div id="lista-vid" class="lista"></div>
     </section>
 
-    <!-- staff -->
+    <!-- staff: usuarios e íconos -->
     <section id="tab-staff" class="tab" hidden>
       <div class="adm-cab">
-        <h1>Usuarios del staff</h1>
+        <h1>Staff</h1>
+      </div>
+
+      <div class="adm-cab adm-sub">
+        <h2>Usuarios del staff</h2>
         <button class="btn btn-mini" id="nuevo-staff" type="button">Crear usuario</button>
       </div>
       <div id="lista-staff" class="lista"></div>
+
+      <div class="adm-cab adm-sub">
+        <h2>Íconos subidos</h2>
+        <button class="btn btn-mini" id="nuevo-ico" type="button">Subir ícono</button>
+      </div>
+      <p class="adm-nota">Los íconos que subas aparecen para escoger en Facciones y en las categorías de la Tienda VIP. Usa un PNG con fondo transparente: la web lo pinta del color de la facción o de la tienda.</p>
+      <div id="lista-ico" class="lista"></div>
+
+      <div class="adm-cab adm-sub">
+        <h2>Íconos incluidos con la web</h2>
+      </div>
+      <div id="iconos-incluidos" class="iconos-grid"></div>
     </section>
 
   </main>
