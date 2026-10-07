@@ -6,7 +6,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL, SUPABASE_KEY, WEBHOOK_URL } from "../config.js";
 import { sb } from "../lib/supabase.js";
-import { ICONOS_VIP, imagenVip } from "../data/vip.js";
+import { imagenVip } from "../data/vip.js";
+import { ICONOS, iconoHtml } from "../data/iconos.js";
 import "../styles/style.css";
 import "../styles/admin.css";
 
@@ -131,6 +132,7 @@ async function entrar(s) {
   abrirDesdeLink();
   if (puede("admin", "staff")) cargarVideos();
   if (puede("admin", "staff")) cargarVip();
+  if (puede("admin", "staff")) cargarIconos();
   if (puede("admin")) cargarStaff();
 }
 
@@ -178,6 +180,7 @@ $$(".adm-tabs button").forEach(b =>
   b.addEventListener("click", () => {
     $$(".adm-tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
     $$(".tab").forEach(t => (t.hidden = t.id !== "tab-" + b.dataset.tab));
+    if (b.dataset.tab === "iconos" && db) pintarIconos();   // para que «Lo usa» esté al día
   })
 );
 
@@ -470,6 +473,7 @@ function pintarFacciones() {
   }
   listaFac.innerHTML = facciones.map(f => `
     <div class="item" style="--c:${colorValido(f.color)}">
+      <span class="item-ico">${iconoHtml(f.icono, "escudo")}</span>
       <span class="item-txt">
         <b>${esc(f.nombre)}</b>
         <small>${esc(f.sigla)} · ${f.preguntas.length} preguntas</small>
@@ -536,7 +540,7 @@ function abrirFaccion(f) {
   el.sigla.value = f?.sigla || "";
   el.descripcion.value = f?.descripcion || "";
   el.color.value = colorValido(f?.color);
-  el.icono.value = f?.icono || "escudo";
+  elegirIcono(el.icono, f?.icono || "escudo");
   el.orden.value = f ? f.orden : facciones.length + 1;
   el.abierta.checked = f ? f.abierta : true;
   el.requisitos.value = (f?.requisitos || ["Whitelist aprobada"]).join("\n");
@@ -632,9 +636,6 @@ const formCat = $("#form-cat");
 let categorias = [];
 let catActual = null;
 
-formCat.elements.icono.innerHTML = Object.entries(ICONOS_VIP)
-  .map(([id, nombre]) => `<option value="${id}">${nombre}</option>`).join("");
-
 async function cargarCategorias() {
   try {
     categorias = await q(db.from("vip_categorias").select("*").order("orden"));
@@ -661,9 +662,10 @@ function pintarCategorias() {
     const n = articulos.filter(a => a.categoria === c.id).length;
     return `
     <div class="item">
+      <span class="item-ico">${iconoHtml(c.icono)}</span>
       <span class="item-txt">
         <b>${esc(c.nombre)}</b>
-        <small>${n} ${n === 1 ? "artículo" : "artículos"} · ícono: ${esc(ICONOS_VIP[c.icono] || c.icono)}</small>
+        <small>${n} ${n === 1 ? "artículo" : "artículos"}</small>
       </span>
       <span class="item-acc">
         <button type="button" data-acc="subir" data-i="${i}" ${i === 0 ? "disabled" : ""} aria-label="Subir">↑</button>
@@ -716,7 +718,7 @@ function abrirCategoria(c) {
   avisar(formCat, "");
   $("#cat-titulo").textContent = c ? c.nombre : "Nueva categoría";
   formCat.elements.nombre.value = c?.nombre || "";
-  formCat.elements.icono.value = c?.icono || "estrella";
+  elegirIcono(formCat.elements.icono, c?.icono || "estrella");
   dlgCat.showModal();
   formCat.elements.nombre.focus();
 }
@@ -847,10 +849,10 @@ async function borrarFoto(url) {
   if (ruta) await db.storage.from("vip").remove([ruta]).catch(console.error);
 }
 
-// achica la imagen a máximo 1200 px y la pasa a WebP para que la tienda cargue rápido
-async function comprimir(archivo) {
+// achica la imagen (por defecto a máximo 1200 px) y la pasa a WebP para que la tienda cargue rápido
+async function comprimir(archivo, max = 1200) {
   const bmp = await createImageBitmap(archivo);
-  const escala = Math.min(1, 1200 / Math.max(bmp.width, bmp.height));
+  const escala = Math.min(1, max / Math.max(bmp.width, bmp.height));
   const lienzo = document.createElement("canvas");
   lienzo.width = Math.round(bmp.width * escala);
   lienzo.height = Math.round(bmp.height * escala);
@@ -1016,6 +1018,197 @@ formVip.addEventListener("submit", async e => {
     // (salvo que sea la misma que ya tenía este artículo)
     if (subida && rutaFoto(vipActual?.imagen) !== subida) db.storage.from("vip").remove([subida]).catch(console.error);
     avisar(formVip, "No se pudo guardar: " + err.message, "mal");
+  } finally {
+    boton.disabled = false;
+  }
+});
+
+
+/* ============================================
+   ÍCONOS
+   ============================================ */
+const listaIco = $("#lista-ico");
+const dlgIco = $("#dlg-ico");
+const formIco = $("#form-ico");
+const previewIco = $("#ico-preview");
+let iconosPropios = [];
+let icoArchivo = null;     // imagen ya achicada que se sube al guardar
+let icoHuella = "";
+let icoUrl = "";           // vista previa local
+
+$("#iconos-incluidos").innerHTML = Object.entries(ICONOS).map(([id, i]) =>
+  `<figure>${iconoHtml(id)}<figcaption>${esc(i.nombre)}</figcaption></figure>`).join("");
+
+// los selects de ícono (facción y categoría) muestran los incluidos y los subidos
+function llenarSelectsIconos() {
+  const incluidos = Object.entries(ICONOS).map(([id, i]) => `<option value="${id}">${esc(i.nombre)}</option>`).join("");
+  const propios = iconosPropios.map(i => `<option value="${esc(i.imagen)}">${esc(i.nombre)}</option>`).join("");
+  const html = `<optgroup label="Incluidos">${incluidos}</optgroup>` + (propios ? `<optgroup label="Subidos">${propios}</optgroup>` : "");
+  $$("select[name=icono]").forEach(sel => {
+    const v = sel.value;
+    sel.innerHTML = html;
+    if (v) elegirIcono(sel, v);
+  });
+}
+
+// si es un ícono subido que ya no está en la lista, igual se deja como opción para no perderlo
+function elegirIcono(sel, valor) {
+  sel.value = valor;
+  if (sel.value !== valor) {
+    sel.insertAdjacentHTML("beforeend", `<option value="${esc(valor)}">Ícono subido (ya no está en la lista)</option>`);
+    sel.value = valor;
+  }
+  muestraIcono(sel);
+}
+
+function muestraIcono(sel) {
+  const m = $(".ico-muestra", sel.parentElement);
+  if (m) m.innerHTML = iconoHtml(sel.value);
+}
+
+$$("select[name=icono]").forEach(sel => sel.addEventListener("change", () => muestraIcono(sel)));
+llenarSelectsIconos();
+
+async function cargarIconos() {
+  try {
+    iconosPropios = await q(db.from("iconos").select("*").order("creado"));
+  } catch (err) {
+    iconosPropios = [];
+    listaIco.innerHTML = err.code === "42P01" || err.code === "PGRST205"
+      ? '<p class="vacia">Falta crear la tabla «iconos»: ejecuta supabase/iconos-2026-10.sql en el SQL Editor.</p>'
+      : '<p class="vacia">No se pudieron cargar los íconos.</p>';
+    llenarSelectsIconos();
+    return fallo(err);
+  }
+  llenarSelectsIconos();
+  pintarIconos();
+}
+
+// quién usa un ícono subido (con lo que ya está cargado en el panel)
+const usosIcono = url => [
+  ...facciones.filter(f => f.icono === url).map(f => f.nombre),
+  ...categorias.filter(c => c.icono === url).map(c => `${c.nombre} (VIP)`),
+];
+
+function pintarIconos() {
+  if (!iconosPropios.length) {
+    if (!listaIco.innerHTML.includes("Falta")) listaIco.innerHTML = '<p class="vacia">Aún no has subido íconos.</p>';
+    return;
+  }
+  listaIco.innerHTML = iconosPropios.map(i => {
+    const usos = usosIcono(i.imagen);
+    return `
+    <div class="item">
+      <span class="item-ico">${iconoHtml(i.imagen)}</span>
+      <span class="item-txt">
+        <b>${esc(i.nombre)}</b>
+        <small>${usos.length ? "Lo usa: " + esc(usos.join(", ")) : "Sin usar"}</small>
+      </span>
+      <span class="item-acc">
+        <button type="button" data-acc="borrar" data-id="${esc(i.id)}" class="peligro">Eliminar</button>
+      </span>
+    </div>`;
+  }).join("");
+}
+
+listaIco.addEventListener("click", async e => {
+  const b = e.target.closest("[data-acc=borrar]");
+  if (!b) return;
+  const i = iconosPropios.find(x => x.id === b.dataset.id);
+
+  try {
+    // se pregunta a la base de datos por si otro del staff lo acaba de poner
+    const [fs, cs] = await Promise.all([
+      q(db.from("facciones").select("nombre").eq("icono", i.imagen)),
+      q(db.from("vip_categorias").select("nombre").eq("icono", i.imagen)),
+    ]);
+    const usos = [...fs.map(f => f.nombre), ...cs.map(c => `${c.nombre} (VIP)`)];
+    if (usos.length) return alert(`No se puede eliminar «${i.nombre}»: lo usa ${usos.join(", ")}.\nCámbiales el ícono primero.`);
+    if (!confirm(`¿Eliminar el ícono ${i.nombre}?`)) return;
+
+    await q(db.from("iconos").delete().eq("id", i.id));
+    borrarFoto(i.imagen);
+    mostrarToast(`Ícono ${i.nombre} eliminado.`);
+    cargarIconos();
+  } catch (err) { fallo(err); }
+});
+
+function soltarIcono() {
+  if (icoUrl) URL.revokeObjectURL(icoUrl);
+  icoArchivo = null;
+  icoHuella = "";
+  icoUrl = "";
+  previewIco.innerHTML = "";
+}
+
+$("#nuevo-ico").addEventListener("click", () => {
+  formIco.reset();
+  avisar(formIco, "");
+  soltarIcono();
+  dlgIco.showModal();
+  formIco.elements.nombre.focus();
+});
+
+formIco.elements.archivo.addEventListener("change", async e => {
+  const archivo = e.target.files[0];
+  e.target.value = "";
+  if (!archivo) return;
+  if (!/^image\/(png|webp|gif)$/.test(archivo.type))
+    return avisar(formIco, "Usa una imagen PNG, WebP o GIF (con fondo transparente).", "mal");
+
+  soltarIcono();
+  try {
+    icoHuella = await huella(archivo);
+    icoArchivo = await comprimir(archivo, 256);
+  } catch (err) {
+    soltarIcono();
+    return avisar(formIco, "No se pudo leer esa imagen.", "mal");
+  }
+  icoUrl = URL.createObjectURL(icoArchivo);
+  previewIco.innerHTML = `<span class="icono-propio" style="--img:url('${icoUrl}')"></span>`;
+  avisar(formIco, "");
+
+  // si no le han puesto nombre, se toma el del archivo
+  if (!formIco.elements.nombre.value.trim())
+    formIco.elements.nombre.value = archivo.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").slice(0, 40);
+});
+
+dlgIco.addEventListener("close", soltarIcono);
+
+formIco.addEventListener("submit", async e => {
+  e.preventDefault();
+  const nombre = formIco.elements.nombre.value.trim();
+  if (!nombre) return avisar(formIco, "Ponle un nombre.", "mal");
+  if (!icoArchivo) return avisar(formIco, "Adjunta la imagen del ícono.", "mal");
+
+  const ruta = `iconos/${icoHuella}.${icoArchivo.type === "image/webp" ? "webp" : "png"}`;
+  const repetido = iconosPropios.find(i => rutaFoto(i.imagen) === ruta);
+  if (repetido) return avisar(formIco, `Esa imagen ya está subida como «${repetido.nombre}».`, "mal");
+
+  const boton = $("button[type=submit]", formIco);
+  boton.disabled = true;
+  avisar(formIco, "Subiendo ícono…");
+  let subida = null;
+  try {
+    const { error } = await db.storage.from("vip").upload(ruta, icoArchivo, {
+      contentType: icoArchivo.type,
+      upsert: true,   // si quedó de un intento anterior, se reemplaza
+      cacheControl: "31536000",
+    });
+    if (error) throw new Error(/bucket/i.test(error.message)
+      ? "falta crear la carpeta de imágenes: ejecuta supabase/schema.sql en Supabase."
+      : error.message);
+    subida = ruta;
+
+    await q(db.from("iconos").insert({ nombre, imagen: db.storage.from("vip").getPublicUrl(ruta).data.publicUrl }));
+    subida = null;
+    dlgIco.close();
+    mostrarToast(`Ícono ${nombre} guardado.`);
+    cargarIconos();
+  } catch (err) {
+    // la imagen se subió pero el ícono no se guardó: no dejarla suelta
+    if (subida) db.storage.from("vip").remove([subida]).catch(console.error);
+    avisar(formIco, "No se pudo guardar: " + err.message, "mal");
   } finally {
     boton.disabled = false;
   }

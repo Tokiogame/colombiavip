@@ -13,21 +13,6 @@ export const imagenVip = v => (!v ? "" : /^https?:\/\//i.test(v) ? v : img(`vip/
 // canal o forma de abrir ticket que se le explica al jugador
 export const VIP_TICKET = "abre un ticket en el canal 🎫 ticket del Discord";
 
-// íconos que se pueden escoger para una categoría (los dibujos están en Vip.jsx)
-export const ICONOS_VIP = {
-  carro: "Carro",
-  moto: "Moto",
-  casa: "Casa",
-  mansion: "Mansión",
-  negocio: "Negocio",
-  exclusivo: "Exclusivo (diamante)",
-  barco: "Barco",
-  avion: "Avión",
-  dinero: "Dinero",
-  ropa: "Ropa",
-  estrella: "Estrella",
-};
-
 // respaldo: solo si Supabase no responde o falta crear la tabla
 export const CATEGORIAS_RESPALDO = [
   { id: "carros", nombre: "Carros", icono: "carro" },

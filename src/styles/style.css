@@ -755,7 +755,7 @@ legend span {
   background: color-mix(in srgb, var(--c) 16%, transparent);
   color: var(--c);
 }
-.faccion-ico svg { width: 28px; height: 28px; }
+.faccion-ico svg, .faccion-ico .icono-propio { width: 28px; height: 28px; }
 
 .estado {
   font: 500 11px var(--f-mono);
@@ -1025,7 +1025,7 @@ legend span {
 }
 .vip-tabs button:hover { color: var(--blanco); border-color: var(--linea); }
 .vip-tabs button.activa { color: #111; border-color: transparent; }
-.vip-tabs svg { width: 20px; height: 20px; position: relative; z-index: 1; }
+.vip-tabs svg, .vip-tabs .icono-propio { width: 20px; height: 20px; position: relative; z-index: 1; }
 .vip-tabs button { isolation: isolate; }
 .vip-tab-fondo {
   position: absolute;
@@ -1064,7 +1064,7 @@ legend span {
 }
 .articulo-img img { width: 100%; height: 100%; object-fit: cover; }
 .articulo-ico { color: var(--oro); opacity: .8; }
-.articulo-ico svg { width: 64px; height: 64px; }
+.articulo-ico svg, .articulo-ico .icono-propio { width: 64px; height: 64px; }
 .articulo-marca {
   position: absolute;
   top: 12px; left: 12px;
@@ -1181,3 +1181,6 @@ legend span {
   .vip-pasos { grid-template-columns: 1fr; }
   .vip-tabs button { padding: 10px 16px; font-size: 17px; }
 }
+
+/* íconos subidos desde el panel: la imagen hace de molde y se pinta con el color del texto */
+.icono-propio { display: inline-block; width: 1em; height: 1em; flex-shrink: 0; background: currentColor; -webkit-mask: var(--img) center/contain no-repeat; mask: var(--img) center/contain no-repeat; }

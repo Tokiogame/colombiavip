@@ -233,3 +233,19 @@ button.item:hover { border-color: var(--linea); background: var(--tarjeta-2); }
 
 /* pie de la lista de solicitudes: cuántas se ven y cargar más */
 .lista-pie { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; padding: 16px 0 4px; font: 13px var(--f-mono); color: var(--gris); }
+
+/* ---------- íconos ---------- */
+.adm-nota { color: var(--gris); font-size: 14px; max-width: 70ch; margin: -6px 0 6px; }
+.item-ico { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 8px; background: var(--fondo); color: var(--c, var(--oro)); }
+.item-ico svg, .item-ico .icono-propio { width: 24px; height: 24px; }
+.iconos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.iconos-grid figure { display: grid; justify-items: center; gap: 8px; margin: 0; padding: 16px 8px 12px; border: 1px solid var(--linea-suave); border-radius: var(--radio); color: var(--oro); }
+.iconos-grid svg { width: 28px; height: 28px; }
+.iconos-grid figcaption { color: var(--gris); font-size: 12px; text-align: center; }
+.ico-elegir { display: flex; align-items: center; gap: 10px; }
+.ico-elegir select { flex: 1; min-width: 0; }
+.ico-muestra { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 8px; background: var(--fondo); color: var(--oro); }
+.ico-muestra svg, .ico-muestra .icono-propio { width: 24px; height: 24px; }
+.ico-preview { display: grid; place-items: center; width: 96px; height: 96px; margin: 0 0 14px; border-radius: 12px; background: var(--fondo); color: var(--oro); }
+.ico-preview:empty { display: none; }
+.ico-preview .icono-propio { width: 56px; height: 56px; }

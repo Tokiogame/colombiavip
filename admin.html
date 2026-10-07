@@ -39,6 +39,7 @@
       <button role="tab" data-tab="solicitudes" aria-selected="true">Solicitudes <span class="badge" id="badge-pend" hidden></span></button>
       <button role="tab" data-tab="facciones" aria-selected="false" data-roles="admin staff">Facciones</button>
       <button role="tab" data-tab="vip" aria-selected="false" data-roles="admin staff">Tienda VIP</button>
+      <button role="tab" data-tab="iconos" aria-selected="false" data-roles="admin staff">Íconos</button>
       <button role="tab" data-tab="videos" aria-selected="false" data-roles="admin staff">Videos</button>
       <button role="tab" data-tab="staff" aria-selected="false" data-roles="admin">Staff</button>
     </nav>
@@ -111,6 +112,25 @@
       <div id="lista-vip" class="lista"></div>
     </section>
 
+    <!-- íconos -->
+    <section id="tab-iconos" class="tab" hidden>
+      <div class="adm-cab">
+        <h1>Íconos</h1>
+        <button class="btn btn-mini" id="nuevo-ico" type="button">Subir ícono</button>
+      </div>
+      <p class="adm-nota">Los íconos que subas aparecen para escoger en Facciones y en las categorías de la Tienda VIP. Usa un PNG con fondo transparente: la web lo pinta del color de la facción o de la tienda.</p>
+
+      <div class="adm-cab adm-sub">
+        <h2>Subidos</h2>
+      </div>
+      <div id="lista-ico" class="lista"></div>
+
+      <div class="adm-cab adm-sub">
+        <h2>Incluidos con la web</h2>
+      </div>
+      <div id="iconos-incluidos" class="iconos-grid"></div>
+    </section>
+
     <!-- videos -->
     <section id="tab-videos" class="tab" hidden>
       <div class="adm-cab">
@@ -177,12 +197,7 @@
           <input name="color" type="color" value="#e0b02c">
         </label>
         <label>Ícono
-          <select name="icono">
-            <option value="escudo">Escudo</option>
-            <option value="cruz">Cruz</option>
-            <option value="estrella">Estrella</option>
-            <option value="balanza">Balanza</option>
-          </select>
+          <span class="ico-elegir"><select name="icono"></select><span class="ico-muestra"></span></span>
         </label>
         <label>Orden
           <input name="orden" type="number" value="0">
@@ -286,8 +301,34 @@
       <input name="nombre" required maxlength="40" placeholder="Helicópteros">
     </label>
     <label>Ícono
-      <select name="icono"></select>
+      <span class="ico-elegir"><select name="icono"></select><span class="ico-muestra"></span></span>
     </label>
+    <div class="form-pie">
+      <button type="submit" class="btn">Guardar</button>
+      <p class="aviso" role="status"></p>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============ SUBIR ÍCONO ============ -->
+<dialog id="dlg-ico" class="modal modal-mini">
+  <form id="form-ico" class="formulario" novalidate>
+    <button type="button" class="cerrar" aria-label="Cerrar">×</button>
+    <p class="etiqueta">Íconos</p>
+    <h3>Subir ícono</h3>
+    <label>Nombre
+      <input name="nombre" required maxlength="40" placeholder="Taxi">
+    </label>
+    <fieldset class="vip-foto">
+      <legend>Imagen <span class="min">PNG o WebP con fondo transparente · cuadrada</span></legend>
+      <div class="ico-preview" id="ico-preview"></div>
+      <div class="vip-foto-acc">
+        <label class="btn btn-linea btn-mini">
+          Adjuntar imagen
+          <input name="archivo" type="file" accept="image/png, image/webp, image/gif" hidden>
+        </label>
+      </div>
+    </fieldset>
     <div class="form-pie">
       <button type="submit" class="btn">Guardar</button>
       <p class="aviso" role="status"></p>

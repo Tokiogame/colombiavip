@@ -4,23 +4,15 @@ import { FACCIONES_RESPALDO, WEBHOOK_URL, ROL_STAFF_ID } from "../config.js";
 import { sb, colorValido } from "../lib/supabase.js";
 import { entregar, slug } from "../lib/envio.js";
 import { Aparecer, Cabecera, Tarjeta3D } from "./ui.jsx";
+import Icono from "./Icono.jsx";
 import { Aviso, Campo, Casilla, Opciones, Texto, resumenErrores, validar } from "./formulario.jsx";
-
-const ICONOS = {
-  cruz: <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" />,
-  escudo: <><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z" /><path d="m12 8 1.2 2.5 2.8.4-2 1.9.5 2.7-2.5-1.3-2.5 1.3.5-2.7-2-1.9 2.8-.4z" fill="currentColor" /></>,
-  estrella: <path d="m12 2 2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z" />,
-  balanza: <><path d="M12 3v18M7 21h10M5 7h14M12 5V3" /><path d="M5 7 2 14a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z" /></>,
-};
 
 function Faccion({ f, onPostular }) {
   return (
     <Tarjeta3D className="faccion" style={{ "--c": colorValido(f.color) }}>
       <div className="faccion-cab">
         <motion.span className="faccion-ico" whileHover={{ rotate: [0, -12, 12, 0], transition: { duration: 0.5 } }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round">
-            {ICONOS[f.icono]}
-          </svg>
+          <Icono nombre={f.icono} respaldo="escudo" />
         </motion.span>
         <span className={`estado ${f.abierta ? "" : "cerrada"}`}>{f.abierta ? "Abierta" : "Cerrada"}</span>
       </div>
@@ -35,7 +27,10 @@ function Faccion({ f, onPostular }) {
   );
 }
 
-const EMOJI = { cruz: "🚑", escudo: "👮", estrella: "🎖️", balanza: "⚖️" };
+const EMOJI = {
+  cruz: "🚑", escudo: "👮", estrella: "🎖️", balanza: "⚖️", sirena: "🚨", herramienta: "🔧", maletin: "💼",
+  arma: "🔫", calavera: "💀", corona: "👑", fuego: "🔥", helicoptero: "🚁", camion: "🚚", cafe: "☕",
+};
 const corta = (t, n) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
 const siNo = r => (r === "Sí" ? "✅ Sí" : r === "No" ? "❌ No" : `🔹 ${r}`);
 
