@@ -1524,7 +1524,6 @@ formNov.addEventListener("submit", async e => {
   if (titulo.length < 3) return avisar(formNov, "Ponle un título.", "mal");
   if (slug.length < 3) return avisar(formNov, "Escribe la dirección de la página (mínimo 3 letras).", "mal");
   if (!el.fecha.value) return avisar(formNov, "Escoge la fecha.", "mal");
-  if (el.publicado.checked && !el.resumen.value.trim()) return avisar(formNov, "Escribe un resumen: es lo que se ve en Google y en las tarjetas.", "mal");
   el.slug.value = slug;
 
   // la fecha: si no la cambiaron se deja la hora original; si es hoy, la hora de ahora
