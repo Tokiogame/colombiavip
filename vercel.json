@@ -3,7 +3,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/novedades", "destination": "/actualizaciones", "permanent": true },
+    { "source": "/novedades/:slug", "destination": "/actualizaciones/:slug", "permanent": true }
+  ],
   "rewrites": [
-    { "source": "/novedades/:slug", "destination": "/novedades/index.html" }
+    { "source": "/actualizaciones/:slug", "destination": "/actualizaciones/index.html" }
   ]
 }

@@ -23,7 +23,7 @@ export function Cierre() {
         <div className="cta-in">
           <Aparecer as="p" className="etiqueta">La ciudad te espera</Aparecer>
           <Aparecer as="h2" delay={0.1}>¿Listo para entrar?</Aparecer>
-          <Aparecer as="p" delay={0.2}>Únete a la comunidad, resuelve tus dudas y entérate primero de las novedades.</Aparecer>
+          <Aparecer as="p" delay={0.2}>Únete a la comunidad, resuelve tus dudas y entérate primero de las actualizaciones.</Aparecer>
           <Aparecer className="acciones" delay={0.3}>
             <Magnetico href={DISCORD_URL} className="btn btn-discord" target="_blank" rel="noopener">Unirme al Discord</Magnetico>
             <Magnetico href={CFX_URL} className="btn btn-linea" target="_blank" rel="noopener">Conectarse al servidor</Magnetico>
@@ -69,7 +69,7 @@ export function Pie({ inicio = true }) {
           <a href={ir("whitelist")}>Whitelist</a>
           <a href={ir("postulaciones")}>Postulaciones</a>
           <a href={ir("vip")}>Tienda VIP</a>
-          <a href="/novedades">Novedades</a>
+          <a href="/actualizaciones">Actualizaciones</a>
           <a href={ir("guias")}>Guías</a>
           <a href={ir("faq")}>Preguntas</a>
           <a href={DISCORD_URL} target="_blank" rel="noopener">Discord</a>

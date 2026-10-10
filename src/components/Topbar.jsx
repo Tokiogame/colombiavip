@@ -3,16 +3,16 @@ import { motion, useScroll, useSpring } from "motion/react";
 import { DISCORD_URL, CFX_URL } from "../config.js";
 import { Magnetico } from "./ui.jsx";
 import LogoAnimado from "./LogoAnimado.jsx";
-import { esReciente } from "../lib/novedades.js";
+import { esReciente, RUTA_LISTA } from "../lib/novedades.js";
 
 // la whitelist sigue en la página (botón de la portada y sección 03), pero en el menú
-// su lugar lo toma Novedades para no amontonar la barra
+// su lugar lo toma Actualizaciones para no amontonar la barra
 const ENLACES = [
   ["entrar", "Cómo entrar"],
   ["normativa", "Normativa"],
   ["postulaciones", "Postulaciones"],
   ["vip", "VIP"],
-  ["novedades", "Novedades"],
+  ["novedades", "Actualizaciones"],
   ["guias", "Guías"],
   ["faq", "Preguntas"],
 ];
@@ -27,8 +27,8 @@ export default function Topbar({ pagina = "inicio", ultima }) {
   const [hayNueva, setHayNueva] = useState(false);
   useEffect(() => setHayNueva(!!ultima && esReciente(ultima.fecha)), [ultima]);
 
-  // Novedades es su propia página; las demás son secciones del inicio
-  const destino = id => (id === "novedades" ? "/novedades" : inicio ? `#${id}` : `/#${id}`);
+  // Actualizaciones es su propia página; las demás son secciones del inicio
+  const destino = id => (id === "novedades" ? RUTA_LISTA : inicio ? `#${id}` : `/#${id}`);
 
   // barra de progreso de lectura
   const { scrollYProgress } = useScroll();
@@ -67,7 +67,7 @@ export default function Topbar({ pagina = "inicio", ultima }) {
             <a key={id} href={destino(id)} className={`${activa === id ? "activo" : ""} ${id === "vip" ? "nav-vip" : ""}`} onClick={() => setAbierta(false)}
               aria-current={id === "novedades" && enNovedades ? "page" : undefined}>
               {texto}
-              {id === "novedades" && hayNueva && <span className="nav-nuevo" title="Hay una novedad reciente" />}
+              {id === "novedades" && hayNueva && <span className="nav-nuevo" title="Hay una actualización reciente" />}
               {activa === id && <motion.i className="nav-marca" layoutId="nav-marca" />}
             </a>
           ))}

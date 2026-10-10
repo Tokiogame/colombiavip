@@ -12,10 +12,11 @@ import Faq from "./components/Faq.jsx";
 import { Cierre, Pie } from "./components/Cierre.jsx";
 import { PaginaNovedad, PaginaNovedades, SeccionNovedades, useRecientes } from "./components/Novedades.jsx";
 
-// "/" -> inicio, "/novedades" -> lista, "/novedades/<slug>" -> una novedad
+// "/" -> inicio, "/actualizaciones" -> lista, "/actualizaciones/<slug>" -> una actualización
+// (también entiende las direcciones viejas /novedades/…)
 export function leerRuta(path) {
   const limpio = path.replace(/index\.html$/, "").replace(/\/+$/, "") || "/";
-  const m = limpio.match(/^\/novedades(?:\/([a-z0-9-]+))?$/);
+  const m = limpio.match(/^\/(?:actualizaciones|novedades)(?:\/([a-z0-9-]+))?$/);
   if (!m) return { pagina: "inicio" };
   return m[1] ? { pagina: "novedad", slug: m[1] } : { pagina: "novedades" };
 }

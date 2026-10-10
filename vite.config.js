@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 
-// base "/": la web tiene páginas en subcarpetas (/novedades/…) y sus archivos se piden desde la raíz
+// base "/": la web tiene páginas en subcarpetas (/actualizaciones/…) y sus archivos se piden desde la raíz
 export default defineConfig({
   base: "/",
   plugins: [react()],

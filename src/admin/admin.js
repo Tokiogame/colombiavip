@@ -1246,12 +1246,12 @@ async function cargarNovedades() {
   } catch (err) {
     listaNov.innerHTML = err.code === "PGRST205" || /novedades/.test(err.message)
       ? '<p class="vacia">Falta crear la tabla: ejecuta <code>supabase/novedades-2026-10.sql</code> en el SQL Editor de Supabase.</p>'
-      : '<p class="vacia">No se pudieron cargar las novedades.</p>';
+      : '<p class="vacia">No se pudieron cargar las actualizaciones.</p>';
     return console.error(err);
   }
 
   if (!novedades.length) {
-    listaNov.innerHTML = '<p class="vacia">Aún no hay novedades. En la web no se muestra la sección hasta que publiques la primera.</p>';
+    listaNov.innerHTML = '<p class="vacia">Aún no hay actualizaciones. En la web no se muestra la sección hasta que publiques la primera.</p>';
     return;
   }
   listaNov.innerHTML = novedades.map((n, i) => `
@@ -1303,12 +1303,12 @@ listaNov.addEventListener("click", async e => {
   if (b.dataset.acc === "ver") return open(rutaNovedad(n.slug), "_blank", "noopener");
   if (b.dataset.acc === "editar") return abrirNovedad(n);
   if (b.dataset.acc === "borrar") {
-    if (!confirm(`¿Eliminar la novedad «${n.titulo}»? Su página dejará de existir.`)) return;
+    if (!confirm(`¿Eliminar la actualización «${n.titulo}»? Su página dejará de existir.`)) return;
     try {
       await q(db.from("novedades").delete().eq("id", n.id));
       mediosDe(n).forEach(borrarMedio);
       cargarNovedades();
-      mostrarToast("Novedad eliminada. " + (n.publicado ? await avisarWeb(null, false) : ""));
+      mostrarToast("Actualización eliminada. " + (n.publicado ? await avisarWeb(null, false) : ""));
     } catch (err) { fallo(err); }
   }
 });
@@ -1325,7 +1325,7 @@ function soltarFotosNov() {
 function pintarFotosNov() {
   const portada = novFotos.findIndex(f => !f.video);
   fotosNov.innerHTML = novFotos.map((f, i) => `
-    <div class="nov-foto${f.video ? " es-video" : ""}${i === portada ? " portada" : ""}">
+    <div class="nov-foto${f.video ? " es-video" : ""}${i === portada ? " es-portada" : ""}">
       <img src="${esc(f.ver)}" alt="" onerror="this.replaceWith('No carga')">
       ${i === portada ? '<span class="marca">Portada</span>' : f.video ? `<span class="marca">${f.url && idYoutube(f.url) ? "YouTube" : "Video"}</span>` : ""}
       <span class="acc">
@@ -1357,7 +1357,7 @@ function agregarLinkNov() {
   const yt = idYoutube(texto);
   const url = yt ? `https://www.youtube.com/watch?v=${yt}` : texto;
   if (!caben()) { avisar(formNov, `Máximo ${MAX_MEDIOS} fotos y videos.`, "mal"); return false; }
-  if (yt && !cabenVideos()) { avisar(formNov, `Máximo ${MAX_VIDEOS} videos por novedad.`, "mal"); return false; }
+  if (yt && !cabenVideos()) { avisar(formNov, `Máximo ${MAX_VIDEOS} videos por actualización.`, "mal"); return false; }
   if (!novFotos.some(f => f.url === url)) novFotos.push(medioGuardado(url));
   el.value = "";
   avisar(formNov, "");
@@ -1380,7 +1380,7 @@ formNov.elements.archivo.addEventListener("change", async e => {
   if (fotos.some(a => a.size > 15 * 1024 * 1024)) return avisar(formNov, "Una de las imágenes pesa más de 15 MB.", "mal");
   if (videos.some(a => a.size > MAX_ENTRADA_MB * 1024 * 1024)) return avisar(formNov, `Un video pesa más de ${MAX_ENTRADA_MB} MB. Súbelo a YouTube y pega el link.`, "mal");
   if (archivos.length > caben()) return avisar(formNov, `Máximo ${MAX_MEDIOS} fotos y videos: te queda espacio para ${caben()}.`, "mal");
-  if (videos.length > cabenVideos()) return avisar(formNov, `Máximo ${MAX_VIDEOS} videos por novedad.`, "mal");
+  if (videos.length > cabenVideos()) return avisar(formNov, `Máximo ${MAX_VIDEOS} videos por actualización.`, "mal");
 
   const boton = $("button[type=submit]", formNov);
   comprimiendo = true;
@@ -1492,7 +1492,7 @@ function abrirNovedad(n) {
   novActual = n || null;
   formNov.reset();
   avisar(formNov, "");
-  $("#nov-titulo").textContent = n ? "Editar novedad" : "Escribir novedad";
+  $("#nov-titulo").textContent = n ? "Editar actualización" : "Escribir actualización";
   const el = formNov.elements;
   el.titulo.value = n?.titulo || "";
   el.slug.value = n?.slug || "";
@@ -1573,7 +1573,7 @@ formNov.addEventListener("submit", async e => {
     avisar(formNov, cambiaWeb ? "Actualizando la web…" : "Guardando…");
     const extra = cambiaWeb ? await avisarWeb(id, anunciar, anunciar && el.mencionar.checked) : "Quedó como borrador.";
     dlgNov.close();
-    mostrarToast(`Novedad guardada. ${extra}`);
+    mostrarToast(`Actualización guardada. ${extra}`);
     cargarNovedades();
   } catch (err) {
     const rutasAntes = antes.flatMap(u => [rutaFoto(u), rutaVideo(u)]);
@@ -1581,7 +1581,7 @@ formNov.addEventListener("submit", async e => {
       const sobran = subidas.filter(([b, r]) => b === bucket && !rutasAntes.includes(r)).map(([, r]) => r);
       if (sobran.length) db.storage.from(bucket).remove(sobran).catch(console.error);
     }
-    avisar(formNov, err.code === "23505" ? "Ya hay otra novedad con esa dirección. Cámbiala un poco."
+    avisar(formNov, err.code === "23505" ? "Ya hay otra actualización con esa dirección. Cámbiala un poco."
       : /galeria/.test(err.message) ? "Falta ejecutar supabase/novedades-galeria-2026-10.sql en el SQL Editor de Supabase."
       : /bucket not found|mime type/i.test(err.message) ? "Falta ejecutar supabase/novedades-videos-2026-10.sql en el SQL Editor de Supabase para poder subir videos."
       : "No se pudo guardar: " + err.message, "mal");

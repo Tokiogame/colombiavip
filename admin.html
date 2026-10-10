@@ -39,7 +39,7 @@
       <button role="tab" data-tab="solicitudes" aria-selected="true">Solicitudes <span class="badge" id="badge-pend" hidden></span></button>
       <button role="tab" data-tab="facciones" aria-selected="false" data-roles="admin staff">Facciones</button>
       <button role="tab" data-tab="vip" aria-selected="false" data-roles="admin staff">Tienda VIP</button>
-      <button role="tab" data-tab="novedades" aria-selected="false" data-roles="admin staff">Novedades</button>
+      <button role="tab" data-tab="novedades" aria-selected="false" data-roles="admin staff">Actualizaciones</button>
       <button role="tab" data-tab="videos" aria-selected="false" data-roles="admin staff">Videos</button>
       <button role="tab" data-tab="staff" aria-selected="false" data-roles="admin">Staff</button>
     </nav>
@@ -115,10 +115,10 @@
     <!-- videos -->
     <section id="tab-novedades" class="tab" hidden>
       <div class="adm-cab">
-        <h1>Novedades</h1>
-        <button class="btn btn-mini" id="nuevo-nov" type="button">Escribir novedad</button>
+        <h1>Actualizaciones</h1>
+        <button class="btn btn-mini" id="nuevo-nov" type="button">Escribir actualización</button>
       </div>
-      <p class="adm-nota">Cada novedad publicada tiene su propia página en la web (<code>/novedades/…</code>), sale en la portada y en el menú. Después de guardar, la web se vuelve a publicar sola: tarda 1 o 2 minutos en verse.</p>
+      <p class="adm-nota">Cada actualización publicada tiene su propia página en la web (<code>/actualizaciones/…</code>, el link que sale en Discord), aparece en el inicio y en el menú. Después de guardar, la web se vuelve a publicar sola: tarda 1 o 2 minutos en verse.</p>
       <div id="lista-nov" class="lista"></div>
     </section>
 
@@ -373,13 +373,13 @@
 <dialog id="dlg-nov" class="modal">
   <form id="form-nov" class="formulario" novalidate>
     <button type="button" class="cerrar" aria-label="Cerrar">×</button>
-    <p class="etiqueta">Novedad</p>
-    <h3 id="nov-titulo">Escribir novedad</h3>
+    <p class="etiqueta">Actualización</p>
+    <h3 id="nov-titulo">Escribir actualización</h3>
     <label>Título <span class="min">claro y con palabras que la gente buscaría</span>
       <input name="titulo" required maxlength="120" placeholder="Actualización 2.4: llegan los taxis y el casino">
     </label>
     <label>Dirección de la página
-      <span class="nov-slug"><span>colombiaviprp.com/novedades/</span><input name="slug" required maxlength="80" autocapitalize="off" spellcheck="false" placeholder="actualizacion-2-4-taxis-y-casino"></span>
+      <span class="nov-slug"><span>colombiaviprp.com/actualizaciones/</span><input name="slug" required maxlength="80" autocapitalize="off" spellcheck="false" placeholder="actualizacion-2-4-taxis-y-casino"></span>
     </label>
     <p class="adm-nota nov-slug-nota" hidden>Ya está publicada: si cambias la dirección, los enlaces viejos dejan de funcionar.</p>
     <div class="fila">

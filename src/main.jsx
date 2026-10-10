@@ -20,11 +20,14 @@ const app = (
 );
 
 // la barra de direcciones queda limpia: sin "/index.html" ni "#seccion"
-// (si alguien entra con un link tipo /#vip, primero se baja a esa sección y luego se limpia)
+// (si alguien entra con un link tipo /#vip, primero se baja a esa sección y luego se limpia).
+// En las actualizaciones queda solo el dominio: el link /actualizaciones/… sirve para
+// compartir y para Google, pero no se muestra (al recargar se vuelve al inicio).
 addEventListener("load", () => {
   const id = decodeURIComponent(location.hash.slice(1));
   if (id) document.getElementById(id)?.scrollIntoView();
-  history.replaceState(null, "", location.pathname.replace(/index\.html$/, "") + location.search);
+  const visible = ruta.pagina === "inicio" ? location.pathname.replace(/index\.html$/, "") + location.search : "/";
+  history.replaceState(null, "", visible);
 });
 
 // los enlaces internos (#vip, #faq…) bajan a su sección sin escribir el # en la URL
@@ -39,7 +42,7 @@ document.addEventListener("click", e => {
 });
 
 // en producción el HTML ya viene prerenderizado: React lo retoma en vez de pintarlo de cero
-// (una novedad recién publicada todavía no tiene su HTML: Vercel sirve el de /novedades
+// (una actualización recién publicada todavía no tiene su HTML: Vercel sirve el de /actualizaciones
 // y aquí se pinta de cero la página que toca)
 if (raiz.hasChildNodes() && mismaPagina) hydrateRoot(raiz, app);
 else {

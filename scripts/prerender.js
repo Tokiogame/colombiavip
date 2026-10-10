@@ -1,11 +1,11 @@
-// Después de `vite build`: genera el HTML de cada página (inicio, /novedades y una por
-// cada novedad publicada), con su <head> para Google y redes, y el sitemap.xml.
+// Después de `vite build`: genera el HTML de cada página (inicio, /actualizaciones y una por
+// cada actualización publicada), con su <head> para Google y redes, y el sitemap.xml.
 import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
 import { SITE_URL, SUPABASE_URL, SUPABASE_KEY } from "../src/config.js";
 import { PREGUNTAS, sinFormato } from "../src/data/faq.js";
-import { CAMPOS_TARJETA, imagenesDe, rutaNovedad, textoPlano, tipoDe } from "../src/lib/novedades.js";
+import { CAMPOS_TARJETA, RUTA_LISTA, imagenesDe, rutaNovedad, textoPlano, tipoDe } from "../src/lib/novedades.js";
 
 const dist = resolve(import.meta.dirname, "../dist");
 const ssr = resolve(import.meta.dirname, "../dist-ssr");
@@ -102,23 +102,23 @@ await writeFile(resolve(dist, "index.html"), pagina({
   }],
 }));
 
-/* ---------- /novedades ---------- */
-await escribir("/novedades", pagina({
+/* ---------- /actualizaciones ---------- */
+await escribir(RUTA_LISTA, pagina({
   ruta: { pagina: "novedades" },
   datos: { lista: tarjetas },
   meta: {
-    titulo: "Novedades y actualizaciones · Colombia VIP RP",
-    tituloCorto: "Novedades de Colombia VIP RP",
+    titulo: "Actualizaciones del servidor · Colombia VIP RP",
+    tituloCorto: "Actualizaciones de Colombia VIP RP",
     descripcion: "Actualizaciones, eventos, parches y anuncios del servidor FiveM colombiano Colombia VIP RP. Entérate de todo lo nuevo en la ciudad.",
-    url: url("/novedades"),
+    url: url(RUTA_LISTA),
   },
   jsonld: [
-    migas(["Inicio", "/"], ["Novedades", "/novedades"]),
+    migas(["Inicio", "/"], ["Actualizaciones", RUTA_LISTA]),
     {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
-      name: "Novedades de Colombia VIP RP",
-      url: url("/novedades"),
+      name: "Actualizaciones de Colombia VIP RP",
+      url: url(RUTA_LISTA),
       inLanguage: "es-CO",
       mainEntity: {
         "@type": "ItemList",
@@ -145,7 +145,7 @@ for (const n of novedades) {
       publicado: n.fecha,
     },
     jsonld: [
-      migas(["Inicio", "/"], ["Novedades", "/novedades"], [n.titulo, ruta]),
+      migas(["Inicio", "/"], ["Actualizaciones", RUTA_LISTA], [n.titulo, ruta]),
       {
         "@context": "https://schema.org",
         "@type": "NewsArticle",
@@ -168,7 +168,7 @@ for (const n of novedades) {
 const hoy = new Date().toISOString().slice(0, 10);
 const entradas = [
   [url("/"), hoy],
-  [url("/novedades"), novedades[0]?.fecha.slice(0, 10) ?? hoy],
+  [url(RUTA_LISTA), novedades[0]?.fecha.slice(0, 10) ?? hoy],
   ...novedades.map(n => [url(rutaNovedad(n.slug)), n.fecha.slice(0, 10)]),
 ];
 await writeFile(resolve(dist, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>
@@ -178,4 +178,4 @@ ${entradas.map(([loc, mod]) => `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${m
 `);
 
 await rm(ssr, { recursive: true, force: true });
-console.log(`prerender listo: inicio, /novedades y ${novedades.length} novedades; sitemap con ${entradas.length} direcciones`);
+console.log(`prerender listo: inicio, ${RUTA_LISTA} y ${novedades.length} actualizaciones; sitemap con ${entradas.length} direcciones`);
