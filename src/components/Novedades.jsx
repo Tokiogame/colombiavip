@@ -26,18 +26,39 @@ function Tipo({ tipo }) {
   return <span className="nov-tipo" style={{ "--c": t.color }}>{t.nombre}</span>;
 }
 
-function Texto({ texto }) {
-  return enLinea(texto).map((p, i) =>
-    p.b ? <b key={i}>{p.b}</b>
-    : p.a ? <a key={i} href={p.href} target="_blank" rel="noopener">{p.a}</a>
-    : p.t);
+function Nodos({ nodos }) {
+  return nodos.map((n, i) =>
+    n.t != null ? n.t
+    : n.emoji ? <img key={i} className="nov-emoji" src={n.emoji} alt={`:${n.nombre}:`} width="22" height="22" loading="lazy" />
+    : n.tag === "a" ? <a key={i} href={n.href} target="_blank" rel="noopener"><Nodos nodos={n.hijos} /></a>
+    : n.tag === "spoiler" ? <span key={i} className="nov-spoiler" tabIndex={0}><Nodos nodos={n.hijos} /></span>
+    : <n.tag key={i}><Nodos nodos={n.hijos} /></n.tag>);
 }
+const Texto = ({ texto }) => <Nodos nodos={enLinea(texto)} />;
 
-export function Contenido({ texto }) {
-  return bloques(texto).map((b, i) =>
+function Bloques({ lista }) {
+  return lista.map((b, i) =>
     b.tipo === "h2" ? <h2 key={i}><Texto texto={b.texto} /></h2>
-    : b.tipo === "ul" ? <ul key={i}>{b.items.map((t, j) => <li key={j}><Texto texto={t} /></li>)}</ul>
+    : b.tipo === "h3" ? <h3 key={i}><Texto texto={b.texto} /></h3>
+    : b.tipo === "sub" ? <p key={i} className="nov-sub"><Texto texto={b.texto} /></p>
+    : b.tipo === "cita" ? <blockquote key={i}><Bloques lista={b.bloques} /></blockquote>
+    : b.tipo === "ul" || b.tipo === "ol" ? <b.tipo key={i}>{b.items.map((t, j) => <li key={j}><Texto texto={t} /></li>)}</b.tipo>
     : <p key={i}><Texto texto={b.texto} /></p>);
+}
+export const Contenido = ({ texto }) => <Bloques lista={bloques(texto)} />;
+
+// las fotos de la novedad al final del texto, en mosaico como en Discord
+function Galeria({ fotos }) {
+  if (!fotos.length) return null;
+  return (
+    <div className={`nov-galeria nov-galeria-${Math.min(fotos.length, 5)}`}>
+      {fotos.map((src, i) => (
+        <a key={src} href={src} target="_blank" rel="noopener">
+          <img src={src} alt={`Ver la imagen ${i + 1} en grande`} loading="lazy" />
+        </a>
+      ))}
+    </div>
+  );
 }
 
 function Imagen({ n, grande }) {
@@ -178,6 +199,7 @@ export function PaginaNovedad({ slug, novedad: inicial, otras = [] }) {
 
         <div className="nov-cuerpo">
           <Contenido texto={n.contenido} />
+          <Galeria fotos={n.galeria || []} />
         </div>
 
         <aside className="nov-cta">

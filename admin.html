@@ -389,32 +389,37 @@
     <label>Resumen <span class="min">1 o 2 frases · sale en la tarjeta, en Google y en Discord · <b id="nov-cuenta">0</b>/220</span>
       <textarea name="resumen" rows="2" maxlength="220" placeholder="Nuevo trabajo de taxista, el casino abre sus puertas y arreglamos los bugs de la grúa."></textarea>
     </label>
-    <label>Texto completo
-      <textarea name="contenido" rows="12" placeholder="Llegó una de las actualizaciones más grandes del año.&#10;&#10;## Nuevo trabajo: taxista&#10;- Recoge clientes por toda la ciudad&#10;- Paga por **kilómetro recorrido**"></textarea>
+    <label>Texto completo <span class="min">escríbelo como en Discord, o copia el anuncio de Discord y pégalo aquí</span>
+      <textarea name="contenido" rows="12" placeholder="&gt; **Temporada de Halloween:** de aquí al 31 de octubre las calles estarán llenas de misterio.&#10;&#10;- Nuevas armas de Halloween&#10;- Nuevos carros IC en el concesionario&#10;- Nueva pista de Fórmula 1 en el norte (inauguración este **viernes**)"></textarea>
     </label>
-    <p class="adm-nota">Formato: deja una línea en blanco entre párrafos · <code>## Subtítulo</code> · <code>- viñeta</code> · <code>**negrita**</code> · <code>[texto](https://link)</code></p>
+    <p class="adm-nota">Igual que en Discord: <code># Subtítulo</code> · <code>&gt; cita</code> · <code>- viñeta</code> · <code>**negrita**</code> · <code>*cursiva*</code> · <code>-# letra pequeña</code> · <code>[texto](https://link)</code>. Si pegas un anuncio que empieza con <code># Título</code>, pasa solo al campo Título. Las menciones (@everyone) no salen en la web.</p>
     <fieldset class="vip-foto">
-      <legend>Imagen <span class="min">opcional · horizontal (16:9) · sale en la página y al compartir el link</span></legend>
-      <div class="vid-preview" id="nov-preview"></div>
+      <legend>Imágenes <span class="min">opcional · hasta 10 · la primera es la portada (sale arriba y al compartir el link), las demás van en mosaico al final, como en Discord</span></legend>
+      <div class="nov-fotos" id="nov-fotos"></div>
       <div class="vip-foto-acc">
         <label class="btn btn-linea btn-mini">
-          Adjuntar imagen
-          <input name="archivo" type="file" accept="image/png, image/jpeg, image/webp" hidden>
+          Adjuntar imágenes
+          <input name="archivo" type="file" accept="image/png, image/jpeg, image/webp" multiple hidden>
         </label>
-        <button type="button" class="btn-texto" id="nov-quitar-foto" hidden>Quitar imagen</button>
       </div>
-      <label>…o pega un link
-        <input name="imagen" placeholder="https://i.imgur.com/….jpg">
+      <label>…o pega un link y presiona Enter
+        <input name="imagen" placeholder="https://i.imgur.com/….jpg" enterkeyhint="done">
       </label>
     </fieldset>
     <label class="check">
       <input type="checkbox" name="publicado">
       Publicada (sin marcar queda como borrador: solo la ve el staff)
     </label>
-    <label class="check" id="nov-anunciar">
-      <input type="checkbox" name="anunciar" checked>
-      Anunciarla en el Discord al publicarla
-    </label>
+    <div id="nov-anunciar">
+      <label class="check">
+        <input type="checkbox" name="anunciar" checked>
+        Anunciarla en el Discord al publicarla (con el texto completo y las fotos)
+      </label>
+      <label class="check">
+        <input type="checkbox" name="mencionar">
+        Mencionar a @everyone @here en el anuncio
+      </label>
+    </div>
     <div class="form-pie">
       <button type="submit" class="btn">Guardar</button>
       <p class="aviso" role="status"></p>

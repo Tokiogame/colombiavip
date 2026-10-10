@@ -5,7 +5,7 @@ import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
 import { SITE_URL, SUPABASE_URL, SUPABASE_KEY } from "../src/config.js";
 import { PREGUNTAS, sinFormato } from "../src/data/faq.js";
-import { CAMPOS_TARJETA, rutaNovedad, textoPlano, tipoDe } from "../src/lib/novedades.js";
+import { CAMPOS_TARJETA, imagenesDe, rutaNovedad, textoPlano, tipoDe } from "../src/lib/novedades.js";
 
 const dist = resolve(import.meta.dirname, "../dist");
 const ssr = resolve(import.meta.dirname, "../dist-ssr");
@@ -156,7 +156,7 @@ for (const n of novedades) {
         dateModified: n.fecha,
         inLanguage: "es-CO",
         mainEntityOfPage: url(ruta),
-        image: [n.imagen || url("/img/og.jpg")],
+        image: imagenesDe(n).length ? imagenesDe(n) : [url("/img/og.jpg")],
         author: { "@type": "Organization", name: "Colombia VIP RP", url: SITE_URL },
         publisher: { "@id": url("/#org") },
       },

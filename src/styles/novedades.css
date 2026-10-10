@@ -129,6 +129,39 @@
 .nov-cuerpo li::marker { color: var(--oro); }
 .nov-cuerpo b { color: var(--blanco); font-weight: 600; }
 .nov-cuerpo a { color: var(--oro-claro); }
+.nov-cuerpo h3 { font: 700 24px/1.1 var(--f-titulo); color: var(--blanco); margin: 30px 0 10px; text-transform: uppercase; }
+.nov-cuerpo ol { padding-left: 26px; margin-bottom: 20px; }
+.nov-cuerpo ol li::marker { color: var(--oro); font-family: var(--f-mono); }
+.nov-cuerpo i { font-style: italic; }
+.nov-cuerpo s { opacity: .7; }
+.nov-cuerpo code { padding: 1px 6px; border-radius: 4px; background: var(--tarjeta); border: 1px solid var(--linea-suave); font: .9em var(--f-mono); color: var(--blanco); }
+/* > cita, como la barrita de Discord */
+.nov-cuerpo blockquote {
+  margin: 0 0 20px;
+  padding: 2px 0 2px 18px;
+  border-left: 4px solid var(--oro);
+  border-radius: 2px;
+  color: var(--blanco);
+}
+.nov-cuerpo blockquote > :last-child { margin-bottom: 0; }
+.nov-sub { font-size: 13px; color: var(--gris) !important; margin-top: -10px; }
+.nov-emoji { display: inline-block; width: 1.3em; height: 1.3em; vertical-align: -.3em; object-fit: contain; }
+.nov-spoiler { background: var(--linea); color: transparent; border-radius: 4px; cursor: pointer; transition: color .2s, background .2s; }
+.nov-spoiler * { visibility: hidden; }
+.nov-spoiler:hover, .nov-spoiler:focus { background: var(--tarjeta); color: inherit; }
+.nov-spoiler:hover *, .nov-spoiler:focus * { visibility: visible; }
+
+/* galería al final del texto: 1 grande, 2 lado a lado, 3 una grande y dos al lado, 4 en cuadro, 5+ en filas */
+.nov-galeria { display: grid; gap: 6px; margin: 34px 0 10px; border-radius: var(--radio); overflow: hidden; grid-template-columns: repeat(6, 1fr); }
+.nov-galeria a { display: block; grid-column: span 2; aspect-ratio: 4 / 3; background: var(--tarjeta); overflow: hidden; }
+.nov-galeria img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s; }
+.nov-galeria a:hover img { transform: scale(1.04); }
+.nov-galeria-1 a { grid-column: span 6; aspect-ratio: 16 / 9; }
+.nov-galeria-2 a, .nov-galeria-4 a { grid-column: span 3; }
+.nov-galeria-3 { grid-template-rows: 1fr 1fr; }
+.nov-galeria-3 a { grid-column: 5 / span 2; aspect-ratio: auto; }
+.nov-galeria-3 a:first-child { grid-column: 1 / span 4; grid-row: span 2; aspect-ratio: 4 / 3; }
+.nov-galeria-5 a:nth-child(-n + 2) { grid-column: span 3; }
 .nov-cta {
   max-width: calc(860px - 2 * var(--gutter));
   margin: 30px auto 100px;
@@ -149,6 +182,9 @@
   .nov-pagina { padding-top: 90px; }
   .nov-entrada { font-size: 18px !important; }
   .nov-cuerpo { font-size: 16px; }
+  .nov-galeria-3 a, .nov-galeria-3 a:first-child { grid-column: span 3; grid-row: auto; aspect-ratio: 4 / 3; }
+  .nov-galeria-3 a:first-child { grid-column: span 6; }
+  .nov-galeria-5 a { grid-column: span 3; }
   .nov-cta { margin-inline: var(--gutter); padding: 24px 18px; }
   .nov-aviso { font-size: 13px; border-radius: 18px; }
   .nov-aviso span { -webkit-line-clamp: 2; line-clamp: 2; line-height: 1.35; }

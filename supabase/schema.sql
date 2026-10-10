@@ -424,12 +424,15 @@ create table if not exists public.novedades (
   tipo      text not null default 'actualizacion' check (tipo in ('actualizacion', 'evento', 'parche', 'anuncio')),
   resumen   text not null default '' check (char_length(resumen) <= 220),
   contenido text not null default '',
-  imagen    text not null default '',
+  imagen    text not null default '',    -- portada
+  galeria   text[] not null default '{}' check (cardinality(galeria) <= 9),  -- las demás fotos
   publicado boolean not null default false,
   fecha     timestamptz not null default now(),
   anunciada timestamptz,               -- cuándo se publicó en Discord (para no repetirla)
   creado    timestamptz not null default now()
 );
+alter table public.novedades
+  add column if not exists galeria text[] not null default '{}' check (cardinality(galeria) <= 9);
 create index if not exists novedades_fecha on public.novedades (fecha desc);
 alter table public.novedades enable row level security;
 

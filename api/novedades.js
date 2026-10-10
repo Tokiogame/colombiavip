@@ -2,11 +2,13 @@
 //   1. Comprueba que el token sea de alguien del staff (admin o staff).
 //   2. Pide a Vercel que vuelva a compilar la web, para que la página de la novedad
 //      exista en HTML y entre al sitemap (variable VERCEL_DEPLOY_HOOK).
-//   3. Si se pide, la anuncia en Discord una sola vez (variable DISCORD_NOVEDADES_WEBHOOK).
+//   3. Si se pide, la anuncia en Discord una sola vez (variable DISCORD_NOVEDADES_WEBHOOK),
+//      escrita como los anuncios del canal: # título, el texto tal cual, las fotos en mosaico
+//      y, si el staff lo marca, @everyone @here al final.
 // Las dos variables se configuran en Vercel > Settings > Environment Variables y nunca
 // llegan al navegador.
 import { SITE_URL, SUPABASE_URL, SUPABASE_KEY } from "../src/config.js";
-import { rutaNovedad, textoPlano, tipoDe } from "../src/lib/novedades.js";
+import { imagenesDe, rutaNovedad, tipoDe } from "../src/lib/novedades.js";
 
 const supabase = (ruta, token, opciones = {}) => fetch(`${SUPABASE_URL}/rest/v1/${ruta}`, {
   ...opciones,
@@ -19,7 +21,21 @@ const supabase = (ruta, token, opciones = {}) => fetch(`${SUPABASE_URL}/rest/v1/
   },
 });
 
-const recorta = (t, n) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
+// el mensaje de Discord (máximo 2000 letras): si el texto no cabe se corta en una línea
+// completa y queda el enlace a la web para leer el resto. Si hay fotos el enlace va entre <>
+// para que Discord no le agregue su vista previa (si no, la vista previa trae la imagen de la web)
+function mensajeDiscord(n, enlace, mencionar, conFotos) {
+  const cabeza = `# ${n.titulo}\n`;
+  const pie = `\n\n-# ${tipoDe(n.tipo).nombre} · [Leer en la web](${conFotos ? `<${enlace}>` : enlace})` + (mencionar ? "\n@everyone @here" : "");
+  let texto = n.contenido.replace(/\r/g, "").replace(/@everyone|@here/g, "").replace(/[ \t]+$/gm, "").trim();
+  const cabe = 2000 - cabeza.length - pie.length;
+  if (texto.length > cabe) {
+    texto = texto.slice(0, cabe - 2);
+    const corte = texto.lastIndexOf("\n");
+    texto = (corte > 0 ? texto.slice(0, corte) : texto).trimEnd() + "\n…";
+  }
+  return cabeza + texto + pie;
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Solo POST" });
@@ -31,7 +47,7 @@ export default async function handler(req, res) {
   const yo = await supabase("rpc/staff_yo", token, { method: "POST", body: "{}" }).then(r => (r.ok ? r.json() : []));
   if (!["admin", "staff"].includes(yo?.[0]?.rol)) return res.status(403).json({ error: "Sin permiso" });
 
-  const { id, anunciar } = req.body || {};
+  const { id, anunciar, mencionar } = req.body || {};
   const respuesta = { reconstruyendo: false, discord: "no" };
 
   // 1) recompilar la web
@@ -49,25 +65,18 @@ export default async function handler(req, res) {
       if (!n?.publicado) respuesta.discord = "no-publicada";
       else if (n.anunciada) respuesta.discord = "ya-anunciada";
       else {
-        const tipo = tipoDe(n.tipo);
         const enlace = SITE_URL + rutaNovedad(n.slug).slice(1);
+        // varias fotos con el mismo "url" Discord las junta en un mosaico (muestra hasta 4)
+        const fotos = imagenesDe(n).slice(0, 4);
         const r = await fetch(webhook, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             username: "Colombia VIP RP",
             avatar_url: SITE_URL + "img/logo.png",
-            allowed_mentions: { parse: [] },
-            embeds: [{
-              title: recorta(n.titulo, 250),
-              url: enlace,
-              description: recorta(textoPlano(n.resumen || n.contenido), 600) + `\n\n**[Leer completa en la web →](${enlace})**`,
-              color: parseInt(tipo.color.slice(1), 16),
-              author: { name: `📢 ${tipo.nombre}` },
-              ...(n.imagen ? { image: { url: n.imagen } } : {}),
-              timestamp: n.fecha,
-              footer: { text: "Colombia VIP RP" },
-            }],
+            content: mensajeDiscord(n, enlace, !!mencionar, fotos.length > 0),
+            allowed_mentions: { parse: mencionar ? ["everyone"] : [] },
+            embeds: fotos.map(url => ({ url: enlace, image: { url } })),
           }),
         }).catch(() => null);
         if (r?.ok) {
