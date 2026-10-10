@@ -26,7 +26,12 @@ function Articulo({ a, icono }) {
         {a.imagen
           ? <img src={imagenVip(a.imagen)} alt={a.nombre} loading="lazy" />
           : <span className="articulo-ico"><Icono nombre={icono} /></span>}
-        {a.destacado && <span className="articulo-marca">Más vendido</span>}
+        {(a.nuevo || a.destacado) && (
+          <span className="articulo-marcas">
+            {a.nuevo && <span className="articulo-marca nuevo">Recién llegado</span>}
+            {a.destacado && <span className="articulo-marca">Más vendido</span>}
+          </span>
+        )}
       </div>
       <div className="articulo-cuerpo">
         <h3>{a.nombre}</h3>

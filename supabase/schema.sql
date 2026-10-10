@@ -325,6 +325,7 @@ create table if not exists public.vip (
   imagen      text not null default '',
   destacado   boolean not null default false,
   agotado     boolean not null default false,
+  nuevo       boolean not null default false,
   orden       int  not null default 0,
   creado      timestamptz not null default now()
 );

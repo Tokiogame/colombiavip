@@ -1065,9 +1065,12 @@ legend span {
 .articulo-img img { width: 100%; height: 100%; object-fit: cover; }
 .articulo-ico { color: var(--oro); opacity: .8; }
 .articulo-ico svg, .articulo-ico .icono-propio { width: 64px; height: 64px; }
-.articulo-marca {
+.articulo-marcas {
   position: absolute;
-  top: 12px; left: 12px;
+  top: 12px; left: 12px; right: 12px;
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.articulo-marca {
   padding: 5px 10px;
   border-radius: 99px;
   background: var(--oro-grad);
@@ -1076,6 +1079,7 @@ legend span {
   text-transform: uppercase;
   letter-spacing: 1px;
 }
+.articulo-marca.nuevo { background: var(--verde); }
 
 .articulo-cuerpo { flex: 1; display: flex; flex-direction: column; padding: 22px 22px 20px; }
 .articulo h3 { font: 800 26px/1 var(--f-titulo); text-transform: uppercase; }

@@ -35,6 +35,8 @@ function avisar(form, texto, tipo) {
 
 const fecha = iso => new Date(iso).toLocaleString("es-CO", { dateStyle: "medium", timeStyle: "short" });
 const colorValido = c => (/^#[0-9a-f]{6}$/i.test(c) ? c : "#e0b02c");
+// para comparar textos sin importar mayúsculas, tildes ni espacios de más
+const comparable = t => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim();
 const slug = t => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 // Supabase devuelve { error } en vez de lanzar; esto lo convierte en excepción
@@ -791,6 +793,7 @@ function pintarVip() {
         <b>${esc(a.nombre)}</b>
         <small>${esc(nombreCat(a.categoria))}${a.incluye?.length ? " · " + esc(a.incluye.join(", ")) : ""}</small>
       </span>
+      ${a.nuevo ? '<span class="chip abierta">Recién llegado</span>' : ""}
       ${a.destacado ? '<span class="chip pendiente">Más vendido</span>' : ""}
       ${a.agotado ? '<span class="chip cerrada">Agotado</span>' : ""}
       <span class="item-acc">
@@ -929,6 +932,7 @@ function abrirVip(a) {
   el.incluye.value = (a?.incluye || []).join("\n");
   el.imagen.value = a?.imagen || "";
   el.destacado.checked = !!a?.destacado;
+  el.nuevo.checked = !!a?.nuevo;
   el.agotado.checked = !!a?.agotado;
 
   soltarFotoNueva();
@@ -947,7 +951,6 @@ formVip.addEventListener("submit", async e => {
 
   // no dejar dos artículos con el mismo nombre (sin importar mayúsculas, tildes ni espacios).
   // Se consulta la base en este momento por si otro del staff lo acaba de agregar.
-  const comparable = t => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim();
   const boton = $("button[type=submit]", formVip);
   boton.disabled = true;   // desde ya, para que un doble clic no alcance a guardar dos veces
   avisar(formVip, "Revisando…");
@@ -982,6 +985,7 @@ formVip.addEventListener("submit", async e => {
     incluye: el.incluye.value.split("\n").map(r => r.trim()).filter(Boolean),
     imagen: el.imagen.value.trim(),
     destacado: el.destacado.checked,
+    nuevo: el.nuevo.checked,
     agotado: el.agotado.checked,
   };
 
