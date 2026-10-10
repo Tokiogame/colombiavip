@@ -8,7 +8,7 @@ import { SUPABASE_URL, SUPABASE_KEY, WEBHOOK_URL } from "../config.js";
 import { sb } from "../lib/supabase.js";
 import { imagenVip } from "../data/vip.js";
 import { ICONOS, iconoHtml } from "../data/iconos.js";
-import { TIPOS, MAX_MEDIOS, MAX_VIDEOS, tipoDe, crearSlug, fechaTexto, esVideo, mediosDe, posterDe, rutaNovedad, textoPlano } from "../lib/novedades.js";
+import { TIPOS, MAX_MEDIOS, MAX_VIDEOS, tipoDe, crearSlug, fechaTexto, esVideo, mediosDe, portadaDeVideo, posterDe, rutaNovedad, textoPlano } from "../lib/novedades.js";
 import { comprimirVideo, cuadroDe, ErrorVideo, MAX_ENTRADA_MB } from "./video.js";
 import "../styles/style.css";
 import "../styles/admin.css";
@@ -1323,7 +1323,8 @@ function soltarFotosNov() {
 }
 
 function pintarFotosNov() {
-  const portada = novFotos.findIndex(f => !f.video);
+  // sin fotos, la portada es la miniatura del primer video
+  const portada = novFotos.some(f => !f.video) ? novFotos.findIndex(f => !f.video) : novFotos.findIndex(f => f.video);
   fotosNov.innerHTML = novFotos.map((f, i) => `
     <div class="nov-foto${f.video ? " es-video" : ""}${i === portada ? " es-portada" : ""}">
       <img src="${esc(f.ver)}" alt="" onerror="this.replaceWith('No carga')">
@@ -1555,8 +1556,9 @@ formNov.addEventListener("submit", async e => {
   const subidas = [];       // [bucket, ruta] subidos en este intento (si algo falla se borran)
   try {
     const urls = await subirMediosNov(subidas);
-    // la portada es la primera foto; lo demás (fotos y videos) va a la galería en su orden
-    const portada = urls.find(u => !esVideo(u)) || "";
+    // la portada es la primera foto (o, si solo hay videos, la miniatura del primero);
+    // lo demás (fotos y videos) va a la galería en su orden
+    const portada = urls.find(u => !esVideo(u)) || portadaDeVideo(urls.filter(esVideo));
     datos.imagen = portada;
     datos.galeria = urls.filter(u => u !== portada);
     avisar(formNov, "Guardando…");

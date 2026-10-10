@@ -153,7 +153,12 @@ export const posterDe = url => idYoutube(url)
   ? `https://i.ytimg.com/vi/${idYoutube(url)}/hqdefault.jpg`
   : url.replace(/\.(mp4|webm)(\?|$)/i, ".webp$2");
 
-export const mediosDe = n => [n.imagen, ...(n.galeria || [])].filter(Boolean);
+// si la actualización solo trae videos, la portada es la miniatura del primero (la pone el panel):
+// sirve para la tarjeta, Google y redes, pero no es una foto más de la galería
+export const portadaDeVideo = videos => (videos[0] ? posterDe(videos[0]) : "");
+export const portadaEsDeVideo = n => !!n.imagen && (n.galeria || []).some(u => esVideo(u) && posterDe(u) === n.imagen);
+
+export const mediosDe = n => [portadaEsDeVideo(n) ? null : n.imagen, ...(n.galeria || [])].filter(Boolean);
 // solo las fotos (para Google, redes y el mosaico de Discord)
 export const imagenesDe = n => mediosDe(n).filter(u => !esVideo(u));
 export const videosDe = n => mediosDe(n).filter(esVideo);

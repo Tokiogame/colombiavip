@@ -156,7 +156,7 @@ for (const n of novedades) {
         dateModified: n.fecha,
         inLanguage: "es-CO",
         mainEntityOfPage: url(ruta),
-        image: imagenesDe(n).length ? imagenesDe(n) : [url("/img/og.jpg")],
+        image: imagenesDe(n).length ? imagenesDe(n) : [n.imagen || url("/img/og.jpg")],
         author: { "@type": "Organization", name: "Colombia VIP RP", url: SITE_URL },
         publisher: { "@id": url("/#org") },
       },

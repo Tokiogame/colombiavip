@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { DISCORD_URL, CFX_URL } from "../config.js";
 import { sb, img } from "../lib/supabase.js";
-import { CAMPOS_TARJETA, RUTA_LISTA, bloques, enLinea, esVideo, fechaTexto, idYoutube, posterDe, rutaNovedad, tipoDe, videosDe } from "../lib/novedades.js";
+import { CAMPOS_TARJETA, RUTA_LISTA, bloques, enLinea, esVideo, fechaTexto, idYoutube, portadaEsDeVideo, posterDe, rutaNovedad, tipoDe, videosDe } from "../lib/novedades.js";
 import { Aparecer, Cabecera, Magnetico } from "./ui.jsx";
 
 // Arranca con lo que trae el HTML prerenderizado y después pide a Supabase lo último
@@ -217,7 +217,8 @@ export function PaginaNovedad({ slug, novedad: inicial, otras = [] }) {
           {n.resumen && <p className="nov-entrada">{n.resumen}</p>}
         </header>
 
-        {n.imagen && <div className="nov-portada"><Imagen n={n} grande /></div>}
+        {/* la miniatura de un video no se repite arriba: el video ya sale abajo */}
+        {n.imagen && !portadaEsDeVideo(n) && <div className="nov-portada"><Imagen n={n} grande /></div>}
 
         <div className="nov-cuerpo">
           <Contenido texto={n.contenido} />
