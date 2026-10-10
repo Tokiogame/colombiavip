@@ -398,17 +398,18 @@
     </label>
     <p class="adm-nota">Igual que en Discord: <code># Subtítulo</code> · <code>&gt; cita</code> · <code>- viñeta</code> · <code>**negrita**</code> · <code>*cursiva*</code> · <code>-# letra pequeña</code> · <code>[texto](https://link)</code>. Si pegas un anuncio que empieza con <code># Título</code>, pasa solo al campo Título. Las menciones (@everyone) no salen en la web.</p>
     <fieldset class="vip-foto">
-      <legend>Imágenes <span class="min">opcional · hasta 10 · la primera es la portada (sale arriba y al compartir el link), las demás van en mosaico al final, como en Discord</span></legend>
+      <legend>Fotos y videos <span class="min">opcional · hasta 10 (máx. 3 videos) · la primera foto es la portada; las demás y los videos van al final, como en Discord</span></legend>
       <div class="nov-fotos" id="nov-fotos"></div>
       <div class="vip-foto-acc">
         <label class="btn btn-linea btn-mini">
-          Adjuntar imágenes
-          <input name="archivo" type="file" accept="image/png, image/jpeg, image/webp" multiple hidden>
+          Adjuntar fotos o videos
+          <input name="archivo" type="file" accept="image/png, image/jpeg, image/webp, video/*" multiple hidden>
         </label>
       </div>
-      <label>…o pega un link y presiona Enter
-        <input name="imagen" placeholder="https://i.imgur.com/….jpg" enterkeyhint="done">
+      <label>…o pega un link (foto o YouTube) y presiona Enter
+        <input name="imagen" placeholder="https://youtu.be/… o https://i.imgur.com/….jpg" enterkeyhint="done">
       </label>
+      <p class="adm-nota">Videos: los clips de hasta 1 minuto se comprimen solos antes de subirse (usa Chrome o Edge). Para videos más largos, súbelos a YouTube y pega el link: no gastan espacio.</p>
     </fieldset>
     <label class="check">
       <input type="checkbox" name="publicado">

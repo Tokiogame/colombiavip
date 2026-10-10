@@ -8,7 +8,7 @@
 // Las dos variables se configuran en Vercel > Settings > Environment Variables y nunca
 // llegan al navegador.
 import { SITE_URL, SUPABASE_URL, SUPABASE_KEY } from "../src/config.js";
-import { imagenesDe, rutaNovedad, tipoDe } from "../src/lib/novedades.js";
+import { imagenesDe, rutaNovedad, tipoDe, videosDe } from "../src/lib/novedades.js";
 
 const supabase = (ruta, token, opciones = {}) => fetch(`${SUPABASE_URL}/rest/v1/${ruta}`, {
   ...opciones,
@@ -23,10 +23,15 @@ const supabase = (ruta, token, opciones = {}) => fetch(`${SUPABASE_URL}/rest/v1/
 
 // el mensaje de Discord (máximo 2000 letras): si el texto no cabe se corta en una línea
 // completa y queda el enlace a la web para leer el resto. Si hay fotos el enlace va entre <>
-// para que Discord no le agregue su vista previa (si no, la vista previa trae la imagen de la web)
-function mensajeDiscord(n, enlace, mencionar, conFotos) {
+// para que Discord no le agregue su vista previa (si no, la vista previa trae la imagen de la web).
+// Los videos van como links sueltos: Discord les pone su reproductor (YouTube y .mp4).
+function mensajeDiscord(n, enlace, mencionar) {
+  const videos = videosDe(n);
+  const conMedios = videos.length + imagenesDe(n).length > 0;
   const cabeza = `# ${n.titulo}\n`;
-  const pie = `\n\n-# ${tipoDe(n.tipo).nombre} · [Leer en la web](${conFotos ? `<${enlace}>` : enlace})` + (mencionar ? "\n@everyone @here" : "");
+  const pie = videos.map(u => "\n" + u).join("")
+    + `\n\n-# ${tipoDe(n.tipo).nombre} · [Leer en la web](${conMedios ? `<${enlace}>` : enlace})`
+    + (mencionar ? "\n@everyone @here" : "");
   let texto = n.contenido.replace(/\r/g, "").replace(/@everyone|@here/g, "").replace(/[ \t]+$/gm, "").trim();
   const cabe = 2000 - cabeza.length - pie.length;
   if (texto.length > cabe) {
@@ -74,7 +79,7 @@ export default async function handler(req, res) {
           body: JSON.stringify({
             username: "Colombia VIP RP",
             avatar_url: SITE_URL + "img/logo.png",
-            content: mensajeDiscord(n, enlace, !!mencionar, fotos.length > 0),
+            content: mensajeDiscord(n, enlace, !!mencionar),
             allowed_mentions: { parse: mencionar ? ["everyone"] : [] },
             embeds: fotos.map(url => ({ url: enlace, image: { url } })),
           }),

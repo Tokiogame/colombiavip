@@ -8,7 +8,8 @@ import { SUPABASE_URL, SUPABASE_KEY, WEBHOOK_URL } from "../config.js";
 import { sb } from "../lib/supabase.js";
 import { imagenVip } from "../data/vip.js";
 import { ICONOS, iconoHtml } from "../data/iconos.js";
-import { TIPOS, MAX_IMAGENES, tipoDe, crearSlug, fechaTexto, imagenesDe, rutaNovedad, textoPlano } from "../lib/novedades.js";
+import { TIPOS, MAX_MEDIOS, MAX_VIDEOS, tipoDe, crearSlug, fechaTexto, esVideo, mediosDe, posterDe, rutaNovedad, textoPlano } from "../lib/novedades.js";
+import { comprimirVideo, cuadroDe, ErrorVideo, MAX_ENTRADA_MB } from "./video.js";
 import "../styles/style.css";
 import "../styles/admin.css";
 
@@ -1305,27 +1306,30 @@ listaNov.addEventListener("click", async e => {
     if (!confirm(`¿Eliminar la novedad «${n.titulo}»? Su página dejará de existir.`)) return;
     try {
       await q(db.from("novedades").delete().eq("id", n.id));
-      imagenesDe(n).forEach(borrarFoto);
+      mediosDe(n).forEach(borrarMedio);
       cargarNovedades();
       mostrarToast("Novedad eliminada. " + (n.publicado ? await avisarWeb(null, false) : ""));
     } catch (err) { fallo(err); }
   }
 });
 
-/* imágenes: adjuntas (van al bucket "vip", carpeta novedades/) o por link. La primera es la portada */
+/* fotos y videos: las fotos van al bucket "vip" (carpeta novedades/), los clips al bucket
+   "videos" ya comprimidos, y los videos largos por link de YouTube. La primera foto es la portada */
+
 function soltarFotosNov() {
-  for (const f of novFotos) if (f.blob) URL.revokeObjectURL(f.url);
+  for (const f of novFotos) if (f.blob) URL.revokeObjectURL(f.ver);
   novFotos = [];
   formNov.elements.archivo.value = "";
 }
 
 function pintarFotosNov() {
+  const portada = novFotos.findIndex(f => !f.video);
   fotosNov.innerHTML = novFotos.map((f, i) => `
-    <div class="nov-foto">
-      <img src="${esc(f.url)}" alt="" onerror="this.replaceWith('No carga')">
-      ${i === 0 ? '<span class="marca">Portada</span>' : ""}
+    <div class="nov-foto${f.video ? " es-video" : ""}${i === portada ? " portada" : ""}">
+      <img src="${esc(f.ver)}" alt="" onerror="this.replaceWith('No carga')">
+      ${i === portada ? '<span class="marca">Portada</span>' : f.video ? `<span class="marca">${f.url && idYoutube(f.url) ? "YouTube" : "Video"}</span>` : ""}
       <span class="acc">
-        ${i > 0 ? `<button type="button" data-acc="portada" data-i="${i}" title="Usar de portada">★</button>` : ""}
+        ${!f.video && i !== portada ? `<button type="button" data-acc="portada" data-i="${i}" title="Usar de portada">★</button>` : ""}
         <button type="button" data-acc="quitar" data-i="${i}" title="Quitar">×</button>
       </span>
     </div>`).join("");
@@ -1336,20 +1340,25 @@ fotosNov.addEventListener("click", e => {
   if (!b) return;
   const [f] = novFotos.splice(+b.dataset.i, 1);
   if (b.dataset.acc === "portada") novFotos.unshift(f);
-  else if (f.blob) URL.revokeObjectURL(f.url);
+  else if (f.blob) URL.revokeObjectURL(f.ver);
   pintarFotosNov();
 });
 
-const caben = () => MAX_IMAGENES - novFotos.length;
+const caben = () => MAX_MEDIOS - novFotos.length;
+const cabenVideos = () => MAX_VIDEOS - novFotos.filter(f => f.video).length;
+const medioGuardado = url => ({ url, ver: esVideo(url) ? posterDe(url) : url, video: esVideo(url) });
 
-// link pegado: se agrega al presionar Enter (o al salir del campo)
+// link pegado (foto o YouTube): se agrega al presionar Enter (o al salir del campo)
 function agregarLinkNov() {
   const el = formNov.elements.imagen;
-  const url = el.value.trim();
-  if (!url) return true;
-  if (!/^https?:\/\/\S+$/.test(url)) { avisar(formNov, "Ese link de imagen no es válido.", "mal"); return false; }
-  if (!caben()) { avisar(formNov, `Máximo ${MAX_IMAGENES} imágenes.`, "mal"); return false; }
-  if (!novFotos.some(f => f.url === url)) novFotos.push({ url });
+  const texto = el.value.trim();
+  if (!texto) return true;
+  if (!/^https?:\/\/\S+$/.test(texto)) { avisar(formNov, "Ese link no es válido.", "mal"); return false; }
+  const yt = idYoutube(texto);
+  const url = yt ? `https://www.youtube.com/watch?v=${yt}` : texto;
+  if (!caben()) { avisar(formNov, `Máximo ${MAX_MEDIOS} fotos y videos.`, "mal"); return false; }
+  if (yt && !cabenVideos()) { avisar(formNov, `Máximo ${MAX_VIDEOS} videos por novedad.`, "mal"); return false; }
+  if (!novFotos.some(f => f.url === url)) novFotos.push(medioGuardado(url));
   el.value = "";
   avisar(formNov, "");
   pintarFotosNov();
@@ -1359,27 +1368,90 @@ formNov.elements.imagen.addEventListener("keydown", e => { if (e.key === "Enter"
 formNov.elements.imagen.addEventListener("change", agregarLinkNov);
 dlgNov.addEventListener("close", soltarFotosNov);
 
+let comprimiendo = false;   // mientras se comprime un video no se puede guardar
+
 formNov.elements.archivo.addEventListener("change", async e => {
   const archivos = [...e.target.files];
   e.target.value = "";
-  if (!archivos.length) return;
-  if (archivos.some(a => !a.type.startsWith("image/"))) return avisar(formNov, "Uno de los archivos no es una imagen.", "mal");
-  if (archivos.some(a => a.size > 15 * 1024 * 1024)) return avisar(formNov, "Una de las imágenes pesa más de 15 MB.", "mal");
-  if (archivos.length > caben()) return avisar(formNov, `Máximo ${MAX_IMAGENES} imágenes: te queda espacio para ${caben()}.`, "mal");
-  avisar(formNov, archivos.length > 1 ? "Preparando imágenes…" : "Preparando imagen…");
+  if (!archivos.length || comprimiendo) return;
+  const fotos = archivos.filter(a => a.type.startsWith("image/"));
+  const videos = archivos.filter(a => a.type.startsWith("video/"));
+  if (fotos.length + videos.length < archivos.length) return avisar(formNov, "Uno de los archivos no es ni foto ni video.", "mal");
+  if (fotos.some(a => a.size > 15 * 1024 * 1024)) return avisar(formNov, "Una de las imágenes pesa más de 15 MB.", "mal");
+  if (videos.some(a => a.size > MAX_ENTRADA_MB * 1024 * 1024)) return avisar(formNov, `Un video pesa más de ${MAX_ENTRADA_MB} MB. Súbelo a YouTube y pega el link.`, "mal");
+  if (archivos.length > caben()) return avisar(formNov, `Máximo ${MAX_MEDIOS} fotos y videos: te queda espacio para ${caben()}.`, "mal");
+  if (videos.length > cabenVideos()) return avisar(formNov, `Máximo ${MAX_VIDEOS} videos por novedad.`, "mal");
+
+  const boton = $("button[type=submit]", formNov);
+  comprimiendo = true;
+  boton.disabled = true;
   try {
-    for (const archivo of archivos) {
+    if (fotos.length) avisar(formNov, fotos.length > 1 ? "Preparando imágenes…" : "Preparando imagen…");
+    for (const archivo of fotos) {
       const [blob, id] = await Promise.all([comprimir(archivo, 1600), huella(archivo)]);
       if (novFotos.some(f => f.huella === id)) continue;   // la misma foto dos veces
-      novFotos.push({ url: URL.createObjectURL(blob), blob, huella: id });
+      novFotos.push({ ver: URL.createObjectURL(blob), blob, huella: id });
+    }
+    pintarFotosNov();
+
+    for (const [i, archivo] of videos.entries()) {
+      const cual = videos.length > 1 ? ` ${i + 1} de ${videos.length}` : "";
+      const id = await huella(archivo);
+      if (novFotos.some(f => f.huella === id)) continue;
+      const mb = Math.round(archivo.size / 1048576);
+      avisar(formNov, `Comprimiendo video${cual} (${mb} MB)…`);
+      const { blob } = await comprimirVideo(archivo, p => avisar(formNov, `Comprimiendo video${cual} (${mb} MB)… ${Math.round(p * 100)}%`));
+      const poster = await cuadroDe(blob);
+      novFotos.push({ ver: URL.createObjectURL(poster), blob, poster, huella: id, video: true });
+      pintarFotosNov();
+      mostrarToast(`Video listo: de ${mb} MB quedó en ${(blob.size / 1048576).toFixed(1)} MB.`);
     }
     avisar(formNov, "");
   } catch (err) {
     console.error(err);
-    avisar(formNov, "No se pudo leer una de las imágenes. Prueba con otra (PNG o JPG).", "mal");
+    avisar(formNov, err instanceof ErrorVideo ? err.message
+      : videos.length ? "No se pudo comprimir el video. Prueba en Chrome o súbelo a YouTube y pega el link."
+      : "No se pudo leer una de las imágenes. Prueba con otra (PNG o JPG).", "mal");
+  } finally {
+    comprimiendo = false;
+    boton.disabled = false;
+    pintarFotosNov();
   }
-  pintarFotosNov();
 });
+
+// sube lo que falte y devuelve las direcciones en orden. "subidas" anota lo subido en este
+// intento para borrarlo si después algo falla
+async function subirMediosNov(subidas) {
+  const urls = [];
+  for (const f of novFotos) {
+    if (!f.blob) { urls.push(f.url); continue; }
+    const bucket = f.video ? "videos" : "vip";
+    const ruta = `novedades/${f.huella}.${f.video ? "mp4" : f.blob.type === "image/webp" ? "webp" : "png"}`;
+    const archivos = [[ruta, f.blob]];
+    if (f.video) archivos.unshift([ruta.replace(/\.mp4$/, ".webp"), f.poster]);
+    for (const [r, blob] of archivos) {
+      const { error } = await db.storage.from(bucket).upload(r, blob, { contentType: blob.type, upsert: true, cacheControl: "31536000" });
+      if (error) throw error;
+      subidas.push([bucket, r]);
+    }
+    f.url = db.storage.from(bucket).getPublicUrl(ruta).data.publicUrl;
+    urls.push(f.url);
+  }
+  return urls;
+}
+
+// en qué parte del bucket "videos" está un clip (null si no es de ahí)
+function rutaVideo(url) {
+  const marca = "/storage/v1/object/public/videos/";
+  return url?.startsWith(SUPABASE_URL) && url.includes(marca) ? decodeURIComponent(url.split(marca)[1]) : null;
+}
+
+// borra una foto o un clip (con su miniatura) que ya no se usa
+function borrarMedio(url) {
+  const ruta = rutaVideo(url);
+  if (!ruta) return borrarFoto(url);
+  return db.storage.from("videos").remove([ruta, ruta.replace(/\.\w+$/, ".webp")]).catch(console.error);
+}
 
 /* pegar un anuncio de Discord: "# Título" pasa al título, el primer párrafo al resumen
    y si traía @everyone se marca la mención */
@@ -1436,7 +1508,7 @@ function abrirNovedad(n) {
   $(".nov-slug-nota", formNov).hidden = true;
   pintarAnunciar();
   soltarFotosNov();
-  novFotos = n ? imagenesDe(n).map(url => ({ url })) : [];
+  novFotos = n ? mediosDe(n).map(medioGuardado) : [];
   pintarFotosNov();
   dlgNov.showModal();
   dlgNov.scrollTop = 0;
@@ -1473,32 +1545,28 @@ formNov.addEventListener("submit", async e => {
     publicado: el.publicado.checked,
   };
   const anunciar = datos.publicado && el.anunciar.checked && !novActual?.anunciada;
-  const antes = novActual ? imagenesDe(novActual) : [];
+  const antes = novActual ? mediosDe(novActual) : [];
 
   const boton = $("button[type=submit]", formNov);
+  if (comprimiendo) return avisar(formNov, "Espera a que termine de comprimir el video.", "mal");
   boton.disabled = true;
   const porSubir = novFotos.filter(f => f.blob);
-  avisar(formNov, porSubir.length ? `Subiendo ${porSubir.length > 1 ? `${porSubir.length} imágenes` : "imagen"}…` : "Guardando…");
-  const subidas = [];       // las que se subieron en este intento (si algo falla se borran)
+  const pesa = porSubir.reduce((t, f) => t + f.blob.size, 0) / 1048576;
+  avisar(formNov, porSubir.length ? `Subiendo ${porSubir.length > 1 ? `${porSubir.length} archivos` : "archivo"} (${pesa.toFixed(1)} MB)…` : "Guardando…");
+  const subidas = [];       // [bucket, ruta] subidos en este intento (si algo falla se borran)
   try {
-    const urls = [];
-    for (const f of novFotos) {
-      if (!f.blob) { urls.push(f.url); continue; }
-      const ruta = `novedades/${f.huella}.${f.blob.type === "image/webp" ? "webp" : "png"}`;
-      const { error } = await db.storage.from("vip").upload(ruta, f.blob, { contentType: f.blob.type, upsert: true, cacheControl: "31536000" });
-      if (error) throw error;
-      subidas.push(ruta);
-      urls.push(db.storage.from("vip").getPublicUrl(ruta).data.publicUrl);
-    }
-    datos.imagen = urls[0] || "";
-    datos.galeria = urls.slice(1);
+    const urls = await subirMediosNov(subidas);
+    // la portada es la primera foto; lo demás (fotos y videos) va a la galería en su orden
+    const portada = urls.find(u => !esVideo(u)) || "";
+    datos.imagen = portada;
+    datos.galeria = urls.filter(u => u !== portada);
     avisar(formNov, "Guardando…");
 
     let id = novActual?.id;
     if (novActual) await q(db.from("novedades").update(datos).eq("id", id));
     else [{ id }] = await q(db.from("novedades").insert(datos).select("id"));
     subidas.length = 0;
-    antes.filter(u => !urls.includes(u)).forEach(borrarFoto);
+    antes.filter(u => !urls.includes(u)).forEach(borrarMedio);
 
     // solo hace falta recompilar si cambió algo que se ve en la web
     const cambiaWeb = datos.publicado || novActual?.publicado;
@@ -1508,11 +1576,14 @@ formNov.addEventListener("submit", async e => {
     mostrarToast(`Novedad guardada. ${extra}`);
     cargarNovedades();
   } catch (err) {
-    const rutasAntes = antes.map(rutaFoto);
-    const sobran = subidas.filter(r => !rutasAntes.includes(r));
-    if (sobran.length) db.storage.from("vip").remove(sobran).catch(console.error);
+    const rutasAntes = antes.flatMap(u => [rutaFoto(u), rutaVideo(u)]);
+    for (const bucket of ["vip", "videos"]) {
+      const sobran = subidas.filter(([b, r]) => b === bucket && !rutasAntes.includes(r)).map(([, r]) => r);
+      if (sobran.length) db.storage.from(bucket).remove(sobran).catch(console.error);
+    }
     avisar(formNov, err.code === "23505" ? "Ya hay otra novedad con esa dirección. Cámbiala un poco."
       : /galeria/.test(err.message) ? "Falta ejecutar supabase/novedades-galeria-2026-10.sql en el SQL Editor de Supabase."
+      : /bucket not found|mime type/i.test(err.message) ? "Falta ejecutar supabase/novedades-videos-2026-10.sql en el SQL Editor de Supabase para poder subir videos."
       : "No se pudo guardar: " + err.message, "mal");
   } finally {
     boton.disabled = false;

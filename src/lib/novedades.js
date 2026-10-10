@@ -135,6 +135,23 @@ const planoBloque = b => b.tipo === "cita" ? b.bloques.map(planoBloque).join(" "
   : plano(enLinea(b.texto));
 export const textoPlano = t => bloques(t).map(planoBloque).join(" ").replace(/\s+/g, " ").trim();
 
-// todas las imágenes de una novedad: la portada y después la galería
-export const imagenesDe = n => [n.imagen, ...(n.galeria || [])].filter(Boolean);
-export const MAX_IMAGENES = 10;
+/* ---------- fotos y videos ----------
+   "imagen" es la portada (siempre una foto) y "galeria" lleva lo demás en orden: fotos,
+   links de YouTube y clips subidos (.mp4/.webm, con su miniatura .webp al lado en el bucket). */
+export const MAX_MEDIOS = 10;
+export const MAX_VIDEOS = 3;
+
+// "https://youtu.be/abc…", "…watch?v=…", "…/shorts/…" -> el ID de 11 letras
+export const idYoutube = url => String(url).match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/)?.[1] || null;
+export const esClip = url => /\.(mp4|webm)(\?|$)/i.test(url);
+export const esVideo = url => esClip(url) || !!idYoutube(url);
+
+// la imagen fija de un video (la de YouTube o la .webp que se subió junto al clip)
+export const posterDe = url => idYoutube(url)
+  ? `https://i.ytimg.com/vi/${idYoutube(url)}/hqdefault.jpg`
+  : url.replace(/\.(mp4|webm)(\?|$)/i, ".webp$2");
+
+export const mediosDe = n => [n.imagen, ...(n.galeria || [])].filter(Boolean);
+// solo las fotos (para Google, redes y el mosaico de Discord)
+export const imagenesDe = n => mediosDe(n).filter(u => !esVideo(u));
+export const videosDe = n => mediosDe(n).filter(esVideo);

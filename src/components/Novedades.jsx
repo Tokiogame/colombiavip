@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { DISCORD_URL, CFX_URL } from "../config.js";
 import { sb, img } from "../lib/supabase.js";
-import { CAMPOS_TARJETA, bloques, enLinea, fechaTexto, rutaNovedad, tipoDe } from "../lib/novedades.js";
+import { CAMPOS_TARJETA, bloques, enLinea, esVideo, fechaTexto, idYoutube, posterDe, rutaNovedad, tipoDe, videosDe } from "../lib/novedades.js";
 import { Aparecer, Cabecera, Magnetico } from "./ui.jsx";
 
 // Arranca con lo que trae el HTML prerenderizado y después pide a Supabase lo último
@@ -46,6 +46,28 @@ function Bloques({ lista }) {
     : <p key={i}><Texto texto={b.texto} /></p>);
 }
 export const Contenido = ({ texto }) => <Bloques lista={bloques(texto)} />;
+
+// un video: YouTube se carga solo al darle play (así la página no descarga nada de YouTube
+// hasta que alguien lo quiera ver) y los clips subidos tampoco bajan nada antes del play
+function Video({ url }) {
+  const [jugando, setJugando] = useState(false);
+  const yt = idYoutube(url);
+  if (!yt) return <video src={url} poster={posterDe(url)} controls preload="none" playsInline />;
+  if (jugando) {
+    return <iframe src={`https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&rel=0`} title="Video de YouTube"
+      allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen />;
+  }
+  return (
+    <button type="button" className="nov-play" onClick={() => setJugando(true)} aria-label="Ver el video">
+      <img src={posterDe(url)} alt="" loading="lazy" />
+      <span aria-hidden="true">▶</span>
+    </button>
+  );
+}
+
+function Videos({ lista }) {
+  return lista.map(url => <div key={url} className="nov-video"><Video url={url} /></div>);
+}
 
 // las fotos de la novedad al final del texto, en mosaico como en Discord
 function Galeria({ fotos }) {
@@ -199,7 +221,8 @@ export function PaginaNovedad({ slug, novedad: inicial, otras = [] }) {
 
         <div className="nov-cuerpo">
           <Contenido texto={n.contenido} />
-          <Galeria fotos={n.galeria || []} />
+          <Videos lista={videosDe(n)} />
+          <Galeria fotos={(n.galeria || []).filter(u => !esVideo(u))} />
         </div>
 
         <aside className="nov-cta">

@@ -416,6 +416,30 @@ create policy "vip fotos: borrar" on storage.objects
   for delete using (bucket_id = 'vip' and public.tiene_rol('admin', 'staff'));
 
 
+-- ---------- videos de las novedades (Storage) ----------
+-- clips cortos subidos desde el panel (ya comprimidos) y su miniatura; los largos van por YouTube
+-- máximo 30 MB por archivo (el panel deja cada clip en ~20 MB o menos)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('videos', 'videos', true, 31457280, array['video/mp4', 'video/webm', 'image/webp', 'image/png'])
+on conflict (id) do update set file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "videos: leer" on storage.objects;
+create policy "videos: leer" on storage.objects
+  for select using (bucket_id = 'videos');
+
+drop policy if exists "videos: subir" on storage.objects;
+create policy "videos: subir" on storage.objects
+  for insert with check (bucket_id = 'videos' and public.tiene_rol('admin', 'staff'));
+
+drop policy if exists "videos: cambiar" on storage.objects;
+create policy "videos: cambiar" on storage.objects
+  for update using (bucket_id = 'videos' and public.tiene_rol('admin', 'staff'));
+
+drop policy if exists "videos: borrar" on storage.objects;
+create policy "videos: borrar" on storage.objects
+  for delete using (bucket_id = 'videos' and public.tiene_rol('admin', 'staff'));
+
+
 -- ---------- novedades (actualizaciones, eventos y anuncios) ----------
 -- cada una tiene su página: /novedades/<slug>; las imágenes van al bucket "vip" (carpeta novedades/)
 create table if not exists public.novedades (
