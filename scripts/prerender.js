@@ -90,7 +90,8 @@ const migas = (...pasos) => ({
 /* ---------- inicio ---------- */
 await writeFile(resolve(dist, "index.html"), pagina({
   ruta: { pagina: "inicio" },
-  datos: { recientes: tarjetas.slice(0, 3) },
+  // las 4 últimas (si la destacada está entre ellas, la sección muestra las otras 3)
+  datos: { recientes: tarjetas.slice(0, 4), destacada: tarjetas.find(t => t.destacada) ?? null },
   jsonld: [{
     "@context": "https://schema.org",
     "@type": "FAQPage",

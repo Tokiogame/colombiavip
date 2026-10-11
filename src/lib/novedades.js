@@ -10,7 +10,7 @@ export const TIPOS = {
 export const tipoDe = t => TIPOS[t] || TIPOS.actualizacion;
 
 // lo que necesita una tarjeta (sin el texto completo, para no cargar de más)
-export const CAMPOS_TARJETA = "slug, titulo, tipo, resumen, imagen, fecha";
+export const CAMPOS_TARJETA = "slug, titulo, tipo, resumen, imagen, fecha, destacada";
 
 // las páginas viven en /actualizaciones (las direcciones viejas /novedades/… redirigen, ver vercel.json)
 export const RUTA_LISTA = "/actualizaciones";

@@ -458,6 +458,9 @@ create table if not exists public.novedades (
 );
 alter table public.novedades
   add column if not exists galeria text[] not null default '{}' check (cardinality(galeria) <= 9);
+-- la destacada sale en grande arriba del inicio y de /actualizaciones (solo una a la vez)
+alter table public.novedades add column if not exists destacada boolean not null default false;
+create unique index if not exists novedades_una_destacada on public.novedades (destacada) where destacada;
 create index if not exists novedades_fecha on public.novedades (fecha desc);
 alter table public.novedades enable row level security;
 

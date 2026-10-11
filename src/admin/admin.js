@@ -1261,6 +1261,7 @@ async function cargarNovedades() {
         <b>${esc(n.titulo)}</b>
         <small>${tipoDe(n.tipo).nombre} · ${fechaTexto(n.fecha)}${n.anunciada ? " · anunciada en Discord" : ""}</small>
       </span>
+      ${n.destacada ? '<span class="chip destacada">★ Destacada</span>' : ""}
       <span class="chip ${n.publicado ? "publicada" : "borrador"}">${n.publicado ? "Publicada" : "Borrador"}</span>
       <span class="item-acc">
         ${n.publicado ? `<button type="button" data-acc="ver" data-i="${i}">Ver</button>` : ""}
@@ -1503,6 +1504,7 @@ function abrirNovedad(n) {
   el.resumen.value = n?.resumen || "";
   el.contenido.value = n?.contenido || "";
   el.publicado.checked = n ? n.publicado : true;
+  el.destacada.checked = !!n?.destacada;
   el.anunciar.checked = true;
   el.mencionar.checked = false;
   slugTocado = !!n;
@@ -1545,6 +1547,11 @@ formNov.addEventListener("submit", async e => {
     contenido: el.contenido.value.trim(),
     publicado: el.publicado.checked,
   };
+  // un borrador no puede ser la destacada: no se vería. El campo solo se manda si la columna
+  // ya existe (o si la marcaron), así el panel sigue guardando aunque falte correr el SQL
+  if (el.destacada.checked || (novActual && "destacada" in novActual)) {
+    datos.destacada = el.destacada.checked && el.publicado.checked;
+  }
   const anunciar = datos.publicado && el.anunciar.checked && !novActual?.anunciada;
   const antes = novActual ? mediosDe(novActual) : [];
 
@@ -1563,6 +1570,11 @@ formNov.addEventListener("submit", async e => {
     datos.imagen = portada;
     datos.galeria = urls.filter(u => u !== portada);
     avisar(formNov, "Guardando…");
+
+    // solo puede haber una destacada: primero se le quita a la que estaba
+    if (datos.destacada && !novActual?.destacada) {
+      await q(db.from("novedades").update({ destacada: false }).eq("destacada", true));
+    }
 
     let id = novActual?.id;
     if (novActual) await q(db.from("novedades").update(datos).eq("id", id));
@@ -1585,6 +1597,7 @@ formNov.addEventListener("submit", async e => {
     }
     avisar(formNov, err.code === "23505" ? "Ya hay otra actualización con esa dirección. Cámbiala un poco."
       : /galeria/.test(err.message) ? "Falta ejecutar supabase/novedades-galeria-2026-10.sql en el SQL Editor de Supabase."
+      : /destacada/.test(err.message) ? "Falta ejecutar supabase/novedades-destacada-2026-10.sql en el SQL Editor de Supabase."
       : /bucket not found|mime type/i.test(err.message) ? "Falta ejecutar supabase/novedades-videos-2026-10.sql en el SQL Editor de Supabase para poder subir videos."
       : "No se pudo guardar: " + err.message, "mal");
   } finally {

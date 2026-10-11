@@ -108,6 +108,24 @@ export function Tarjeta({ n }) {
   );
 }
 
+// la destacada: en grande, foto a un lado y texto al otro (en celular, una debajo de la otra)
+export function Destacada({ n }) {
+  return (
+    <motion.article className="nov-destacada" whileHover="hover" style={{ "--c": tipoDe(n.tipo).color }}>
+      <a href={rutaNovedad(n.slug)}>
+        <motion.div className="nov-img" variants={{ hover: { scale: 1.015 } }}><Imagen n={n} grande /></motion.div>
+        <div className="nov-destacada-txt">
+          <p className="nov-destacada-marca">★ Destacada</p>
+          <p className="nov-meta"><Tipo tipo={n.tipo} /><time dateTime={n.fecha}>{fechaTexto(n.fecha)}</time></p>
+          <h3>{n.titulo}</h3>
+          {n.resumen && <p className="nov-resumen-corto">{n.resumen}</p>}
+          <span className="btn">Ver actualización</span>
+        </div>
+      </a>
+    </motion.article>
+  );
+}
+
 /* ---------- portada: una línea con lo último ---------- */
 export function AvisoNovedad({ n }) {
   if (!n) return null;
@@ -121,14 +139,16 @@ export function AvisoNovedad({ n }) {
   );
 }
 
-/* ---------- inicio: las 3 últimas ---------- */
-export function SeccionNovedades({ recientes }) {
-  if (!recientes?.length) return null;
+/* ---------- inicio: la destacada (si hay) y las 3 últimas ---------- */
+export function SeccionNovedades({ recientes, destacada }) {
+  if (!recientes?.length && !destacada) return null;
+  const resto = (recientes || []).filter(n => n.slug !== destacada?.slug).slice(0, 3);
   return (
     <section id="novedades" className="bloque">
       <Cabecera num="06" titulo="Actualizaciones">Lo nuevo de la ciudad: actualizaciones, eventos y anuncios.</Cabecera>
+      {destacada && <Aparecer><Destacada n={destacada} /></Aparecer>}
       <div className="nov-grid">
-        {recientes.slice(0, 3).map((n, i) => (
+        {resto.map((n, i) => (
           <Aparecer key={n.slug} delay={i * 0.1}><Tarjeta n={n} /></Aparecer>
         ))}
       </div>
@@ -139,14 +159,29 @@ export function SeccionNovedades({ recientes }) {
   );
 }
 
-// la portada pide las 3 últimas y le pasa la primera al aviso
+// la portada pide las 4 últimas (por si una es la destacada) y le pasa la primera al aviso
 export function useRecientes(inicial) {
-  return useFresco(inicial, () => publicadas().limit(3));
+  return useFresco(inicial, () => publicadas().limit(4));
+}
+
+// la destacada de ahora (puede no haber ninguna, o haberla quitado después del último deploy)
+export function useDestacada(inicial) {
+  const [valor, setValor] = useState(inicial);
+  useEffect(() => {
+    if (!sb) return;
+    let vivo = true;
+    publicadas().eq("destacada", true).limit(1)
+      .then(({ data, error }) => { if (vivo && !error) setValor(data?.[0] ?? null); });
+    return () => { vivo = false; };
+  }, []);
+  return valor;
 }
 
 /* ---------- /actualizaciones ---------- */
 export function PaginaNovedades({ lista: inicial }) {
   const lista = useFresco(inicial, publicadas);
+  const destacada = lista.find(n => n.destacada);
+  const resto = lista.filter(n => n !== destacada);
 
   return (
     <main className="nov-pagina">
@@ -159,9 +194,12 @@ export function PaginaNovedades({ lista: inicial }) {
 
       <section className="bloque nov-lista" aria-label="Todas las actualizaciones">
         {lista.length ? (
-          <div className="nov-grid">
-            {lista.map((n, i) => <Aparecer key={n.slug} delay={(i % 3) * 0.08}><Tarjeta n={n} /></Aparecer>)}
-          </div>
+          <>
+            {destacada && <Aparecer><Destacada n={destacada} /></Aparecer>}
+            <div className="nov-grid">
+              {resto.map((n, i) => <Aparecer key={n.slug} delay={(i % 3) * 0.08}><Tarjeta n={n} /></Aparecer>)}
+            </div>
+          </>
         ) : (
           <p className="nov-vacio">Todavía no hay actualizaciones publicadas. Entra al <a href={DISCORD_URL} target="_blank" rel="noopener">Discord</a> para enterarte de todo.</p>
         )}

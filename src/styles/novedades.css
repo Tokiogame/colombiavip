@@ -125,6 +125,30 @@
 .nov-resumen-corto { color: var(--texto); font-size: 15px; margin-top: 8px; }
 .nov-todas { margin-top: 44px; text-align: center; }
 
+/* la destacada: grande, foto a la izquierda y texto a la derecha */
+.nov-destacada { margin-bottom: 44px; }
+.nov-destacada a {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  align-items: center;
+  gap: 36px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--c) 45%, var(--linea-suave));
+  border-radius: calc(var(--radio) + 6px);
+  background: radial-gradient(ellipse 70% 100% at 100% 50%, color-mix(in srgb, var(--c) 10%, transparent), transparent 70%), var(--tarjeta);
+  text-decoration: none;
+  transition: border-color .2s;
+}
+.nov-destacada a:hover { border-color: var(--c); }
+.nov-destacada .nov-img { margin: 0; }
+.nov-destacada .nov-sin-img b { font-size: clamp(30px, 3.6vw, 52px); }
+.nov-destacada-txt { padding: 10px 16px 10px 0; }
+.nov-destacada-marca { margin-bottom: 14px; font: 600 12px var(--f-mono); letter-spacing: 2px; text-transform: uppercase; color: var(--oro); }
+.nov-destacada h3 { font: 800 clamp(32px, 3.4vw, 48px)/1 var(--f-titulo); text-transform: uppercase; letter-spacing: -.2px; margin: 4px 0 14px; transition: color .2s; }
+.nov-destacada a:hover h3 { color: var(--oro-claro); }
+.nov-destacada .nov-resumen-corto { font-size: 16px; margin-bottom: 22px; }
+.nov-destacada .btn { pointer-events: none; }
+
 /* páginas */
 .nov-pagina { padding-top: 120px; }
 .nov-cab { max-width: 860px; margin: 0 auto; padding: 40px var(--gutter) 10px; }
@@ -220,6 +244,8 @@
 
 @media (max-width: 980px) {
   .nov-grid { grid-template-columns: 1fr 1fr; }
+  .nov-destacada a { grid-template-columns: 1fr; gap: 18px; }
+  .nov-destacada-txt { padding: 0 8px 10px; }
 }
 @media (max-width: 640px) {
   .nov-grid { grid-template-columns: 1fr; }

@@ -10,7 +10,7 @@ import Vip from "./components/Vip.jsx";
 import Guias from "./components/Guias.jsx";
 import Faq from "./components/Faq.jsx";
 import { Cierre, Pie } from "./components/Cierre.jsx";
-import { PaginaNovedad, PaginaNovedades, SeccionNovedades, useRecientes } from "./components/Novedades.jsx";
+import { PaginaNovedad, PaginaNovedades, SeccionNovedades, useDestacada, useRecientes } from "./components/Novedades.jsx";
 
 // "/" -> inicio, "/actualizaciones" -> lista, "/actualizaciones/<slug>" -> una actualización
 // (también entiende las direcciones viejas /novedades/…)
@@ -21,8 +21,9 @@ export function leerRuta(path) {
   return m[1] ? { pagina: "novedad", slug: m[1] } : { pagina: "novedades" };
 }
 
-function Inicio({ recientes: inicial }) {
+function Inicio({ recientes: inicial, destacada: destacadaInicial }) {
   const recientes = useRecientes(inicial ?? []);
+  const destacada = useDestacada(destacadaInicial ?? null);
   return (
     <main>
       <Portada ultima={recientes[0]} />
@@ -31,7 +32,7 @@ function Inicio({ recientes: inicial }) {
       <Whitelist />
       <Postulaciones />
       <Vip />
-      <SeccionNovedades recientes={recientes} />
+      <SeccionNovedades recientes={recientes} destacada={destacada} />
       <Guias />
       <Faq />
       <Cierre />
@@ -49,7 +50,7 @@ export default function App({ ruta = { pagina: "inicio" }, datos = {} }) {
     <MotionConfig reducedMotion="user">
       <ToastProvider>
         <Topbar pagina={ruta.pagina} ultima={ultima} />
-        {inicio && <Inicio recientes={datos.recientes} />}
+        {inicio && <Inicio recientes={datos.recientes} destacada={datos.destacada} />}
         {ruta.pagina === "novedades" && <PaginaNovedades lista={datos.lista ?? []} />}
         {ruta.pagina === "novedad" && (
           <>

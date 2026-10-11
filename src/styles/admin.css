@@ -267,6 +267,7 @@ button.item:hover { border-color: var(--linea); background: var(--tarjeta-2); }
 .nov-foto .acc { position: absolute; right: 4px; bottom: 4px; display: flex; gap: 4px; }
 .nov-foto .acc button { padding: 3px 8px; border: 0; border-radius: 6px; background: rgba(0, 0, 0, .75); color: #fff; font: 12px var(--f-mono); cursor: pointer; }
 .nov-foto .acc button:hover { background: #000; color: var(--oro); }
+.chip.destacada { background: rgba(224, 176, 44, .14); color: var(--oro); }
 .chip.borrador { background: rgba(255, 255, 255, .06); color: var(--gris); }
 .chip.publicada { background: rgba(62, 207, 110, .12); color: var(--verde); }
 @media (max-width: 640px) { .nov-slug > span { display: none; } .nov-slug input { border-radius: 8px !important; } }
