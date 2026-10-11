@@ -498,9 +498,9 @@ h1 em {
   margin: -40px 0 -10px;
   filter: none;
 }
-.marca-logo { display: block; width: 160px; height: auto; margin: -18px -14px; }
+.marca-logo { display: block; width: 270px; max-width: none; height: auto; margin: -46px -60px; }
 /* en Safari se usa la imagen quieta, que no trae ese aire */
-img.marca-logo { width: 140px; margin: 0; }
+img.marca-logo { width: 180px; margin: 0; }
 
 .cinta-video {
   display: block;
@@ -518,7 +518,7 @@ img.marca-logo { width: 140px; margin: 0; }
 }
 
 @media (max-width: 640px) {
-  .marca-logo { width: 130px; margin: -14px -10px; }
-  img.marca-logo { width: 110px; margin: 0; }
+  .marca-logo { width: 200px; margin: -32px -44px; }
+  img.marca-logo { width: 130px; margin: 0; }
   .portada-logo-animado { margin-top: -20px; }
 }

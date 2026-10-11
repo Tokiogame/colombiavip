@@ -80,7 +80,9 @@ code { font-family: var(--f-mono); font-size: .92em; color: var(--oro-claro); }
   gap: 44px;
 }
 
-.marca { display: block; line-height: 0; }
+/* que el menú no lo encoja: el video tiene max-width: 100% y se dejaba aplastar */
+.marca { display: block; flex-shrink: 0; line-height: 0; border-radius: 8px; }
+.marca:focus:not(:focus-visible) { outline: none; }
 .marca img { width: 140px; height: auto; }
 
 .nav { display: flex; gap: 34px; margin-right: auto; }
