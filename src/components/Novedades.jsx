@@ -86,7 +86,13 @@ function Galeria({ fotos }) {
 function Imagen({ n, grande }) {
   return n.imagen
     ? <img src={n.imagen} alt="" width="1200" height="675" loading={grande ? undefined : "lazy"} fetchPriority={grande ? "high" : undefined} />
-    : <span className="nov-sin-img"><img src={img("logo-mini.webp")} alt="" width="110" height="60" /></span>;
+    // sin foto: una portada con el título, en el color de su tipo
+    : (
+      <span className="nov-sin-img" style={{ "--c": tipoDe(n.tipo).color }}>
+        <img src={img("logo-mini.webp")} alt="" width="110" height="60" />
+        <b>{n.titulo}</b>
+      </span>
+    );
 }
 
 export function Tarjeta({ n }) {

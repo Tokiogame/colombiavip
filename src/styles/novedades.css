@@ -68,11 +68,38 @@
 .nov-sin-img {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  background: radial-gradient(circle at 50% 50%, rgba(224, 176, 44, .1), transparent 65%), var(--tarjeta);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 22px 22px 26px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 90% at 100% 0%, color-mix(in srgb, var(--c) 30%, transparent), transparent 70%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, .025) 0 2px, transparent 2px 14px),
+    linear-gradient(160deg, #1a1712, #0b0a08);
 }
-.nov-sin-img img { width: 110px; height: auto; opacity: .55; }
+/* franja de la bandera abajo */
+.nov-sin-img::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--amarillo) 0 50%, var(--azul) 50% 75%, var(--rojo) 75%);
+}
+.nov-sin-img img { position: absolute; top: 18px; left: 20px; width: 74px; height: auto; opacity: .9; }
+.nov-sin-img b {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  font: 800 clamp(26px, 2.6vw, 38px)/.95 var(--f-titulo);
+  text-transform: uppercase;
+  letter-spacing: -.2px;
+  color: var(--blanco);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, .6);
+}
 .nov-meta {
   display: flex;
   flex-wrap: wrap;
