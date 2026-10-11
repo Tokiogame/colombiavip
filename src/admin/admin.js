@@ -1401,7 +1401,8 @@ formNov.elements.archivo.addEventListener("change", async e => {
       if (novFotos.some(f => f.huella === id)) continue;
       const mb = Math.round(archivo.size / 1048576);
       avisar(formNov, `Comprimiendo video${cual} (${mb} MB)…`);
-      const { blob } = await comprimirVideo(archivo, p => avisar(formNov, `Comprimiendo video${cual} (${mb} MB)… ${Math.round(p * 100)}%`));
+      const { blob } = await comprimirVideo(archivo, (p, intento) =>
+        avisar(formNov, `${intento > 1 ? "Quedó pesado, comprimiendo otra vez" : "Comprimiendo"} video${cual} (${mb} MB)… ${Math.round(p * 100)}%`));
       const poster = await cuadroDe(blob);
       novFotos.push({ ver: URL.createObjectURL(poster), blob, poster, huella: id, video: true });
       pintarFotosNov();
