@@ -348,7 +348,8 @@ create table if not exists public.vip_categorias (
   id     text primary key check (id ~ '^[a-z0-9-]{1,40}$'),
   nombre text not null check (char_length(nombre) between 1 and 40),
   icono  text not null default 'estrella',
-  orden  int  not null default 0
+  orden  int  not null default 0,
+  proximamente boolean not null default false
 );
 alter table public.vip_categorias enable row level security;
 

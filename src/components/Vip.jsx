@@ -47,6 +47,61 @@ function Articulo({ a, icono }) {
   );
 }
 
+// categoría marcada «Próximamente» en el panel: un adelanto en vez de los artículos
+const PRONTO = "PRÓXIMAMENTE";
+
+function Proximamente({ categoria }) {
+  return (
+    <div className="vip-pronto">
+      <span className="vip-pronto-escaneo" aria-hidden="true" />
+
+      <div className="vip-pronto-radar" aria-hidden="true">
+        <i /><i /><i />
+        <span className="vip-pronto-aro" />
+        <motion.span
+          className="vip-pronto-ico"
+          initial={{ scale: 0.4, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
+        >
+          <Icono nombre={categoria.icono} />
+        </motion.span>
+      </div>
+
+      <p className="etiqueta">Llega pronto a la ciudad</p>
+      <h3 className="vip-pronto-titulo" aria-label={PRONTO}>
+        {[...PRONTO].map((l, i) => (
+          <motion.span key={i} aria-hidden="true"
+            initial={{ opacity: 0, y: 28, rotateX: -90 }}
+            animate={{ opacity: 1, y: 0, rotateX: 0 }}
+            transition={{ delay: 0.25 + i * 0.045, type: "spring", stiffness: 320, damping: 20 }}
+          >{l}</motion.span>
+        ))}
+      </h3>
+      <p className="vip-pronto-txt">
+        Estamos preparando <b>{categoria.nombre}</b> para el server. Pendiente del Discord: los primeros en enterarse se llevan lo mejor.
+      </p>
+
+      <div className="vip-pronto-cajas" aria-hidden="true">
+        {[0, 1, 2].map(i => (
+          <motion.div key={i} className="vip-pronto-caja"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 + i * 0.12 }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+            </svg>
+            <b>???</b>
+          </motion.div>
+        ))}
+      </div>
+
+      <a className="btn btn-linea" href={DISCORD_URL} target="_blank" rel="noopener">Avísame en el Discord</a>
+    </div>
+  );
+}
+
 export default function Vip() {
   const [elegida, setElegida] = useState(null);
   const [categorias, setCategorias] = useState(sb ? [] : CATEGORIAS_RESPALDO);
@@ -91,6 +146,7 @@ export default function Vip() {
             className={cat === c.id ? "activa" : ""} onClick={() => setElegida(c.id)}>
             <Icono nombre={c.icono} />
             {c.nombre}
+            {c.proximamente && <span className="vip-tab-pronto">Pronto</span>}
             {cat === c.id && <motion.i className="vip-tab-fondo" layoutId="vip-tab" transition={{ type: "spring", stiffness: 400, damping: 34 }} />}
           </button>
         ))}
@@ -107,6 +163,7 @@ export default function Vip() {
         >
           {todos === null ? [0, 1, 2].map(i => <div key={i} className="video-cargando" />)
             : !categoria ? <p className="vip-vacio">Pronto abriremos la tienda.</p>
+            : categoria.proximamente ? <Proximamente categoria={categoria} />
             : articulos.length
             ? articulos.map(a => <Articulo key={a.id ?? a.nombre} a={a} icono={categoria.icono} />)
             : <p className="vip-vacio">Pronto habrá artículos en esta categoría.</p>}

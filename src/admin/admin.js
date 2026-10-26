@@ -672,6 +672,7 @@ function pintarCategorias() {
         <b>${esc(c.nombre)}</b>
         <small>${n} ${n === 1 ? "artículo" : "artículos"}</small>
       </span>
+      ${c.proximamente ? '<span class="chip pendiente">Próximamente</span>' : ""}
       <span class="item-acc">
         <button type="button" data-acc="subir" data-i="${i}" ${i === 0 ? "disabled" : ""} aria-label="Subir">↑</button>
         <button type="button" data-acc="bajar" data-i="${i}" ${i === categorias.length - 1 ? "disabled" : ""} aria-label="Bajar">↓</button>
@@ -724,6 +725,7 @@ function abrirCategoria(c) {
   $("#cat-titulo").textContent = c ? c.nombre : "Nueva categoría";
   formCat.elements.nombre.value = c?.nombre || "";
   elegirIcono(formCat.elements.icono, c?.icono || "estrella");
+  formCat.elements.proximamente.checked = !!c?.proximamente;
   dlgCat.showModal();
   formCat.elements.nombre.focus();
 }
@@ -734,7 +736,7 @@ formCat.addEventListener("submit", async e => {
   e.preventDefault();
   const nombre = formCat.elements.nombre.value.trim();
   if (!nombre) return avisar(formCat, "Ponle un nombre.", "mal");
-  const datos = { nombre, icono: formCat.elements.icono.value };
+  const datos = { nombre, icono: formCat.elements.icono.value, proximamente: formCat.elements.proximamente.checked };
 
   const boton = $("button[type=submit]", formCat);
   boton.disabled = true;
